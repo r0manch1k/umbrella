@@ -2,7 +2,7 @@
 
 © Umbrella Corp. Internal Network Access Node. All Rights Reserved.
 
-TOP SECRET // INTERNAL USE ONLY
+INTERNAL USE ONLY
 
 ### Installation
 
