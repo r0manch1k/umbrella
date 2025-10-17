@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/background.jpg</file>
+        <file>images/logo.png</file>
+        <file>audio/theme.mp3</file>
+    </qresource>
+</RCC>
