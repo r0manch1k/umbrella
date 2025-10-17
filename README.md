@@ -7,5 +7,6 @@ TOP SECRET // INTERNAL USE ONLY
 ### Installation
 
 ```sh
-export CMAKE_PREFIX_PATH=/Users/<user>/Qt/6.9.3/macos/lib/cmake
+cp CMakeList.txt.example CMakeList.txt
+# set(CMAKE_PREFIX_PATH "/Users/<USER>/Qt/6.9.3/macos/lib/cmake")
 ```
