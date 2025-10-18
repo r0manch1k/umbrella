@@ -7,8 +7,15 @@
 #include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QUrl>
+#include <QFrame>
 #include <QFontDatabase>
 #include <QLabel>
+#include <QShortcut>
+#include <QTextEdit>
+#include <QMouseEvent>
+#include <QWidget>
+#include <QMainWindow>
+#include <QApplication>
 
 
 
@@ -46,6 +53,30 @@ AuthWindow::AuthWindow(QWidget *parent)
     audioOutput->setVolume(0.25);
 
     player->play();
+
+    QFrame *overlay = new QFrame(this);
+    overlay->setStyleSheet("background-color: rgba(0, 0, 0, 180);");
+    overlay->setGeometry(0, 0, 300, 600);
+    overlay->hide();
+
+    QTextEdit *console = new QTextEdit(overlay);
+    console->setGeometry(0, 0, 300, 600);
+    console->setStyleSheet("background-color: black; color: lime;");
+
+
+    QShortcut *shortcut = new QShortcut(QKeySequence("~"), this);
+    connect(shortcut, &QShortcut::activated, this, [=]() {
+        overlay->setVisible(!overlay->isVisible());
+    });
+}
+
+void AuthWindow::mousePressEvent(QMouseEvent *event)
+{
+    QWidget *focused = QApplication::focusWidget();
+    if (focused && qobject_cast<QLineEdit*>(focused)) {
+        focused->clearFocus();
+    }
+    QMainWindow::mousePressEvent(event);
 }
 
 AuthWindow::~AuthWindow()
