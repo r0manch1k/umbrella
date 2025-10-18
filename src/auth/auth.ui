@@ -18,7 +18,24 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Umbrella Corp. Internal Network Access Node</string>
+   <string>Umbrella Corp. Internal Network</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QPushButton#enterButton {
+	background-color: rgb(100, 0, 0);
+	color: rgb(202, 202, 202);
+	border: 0;
+	padding: 3px;
+}
+
+QPushButton#enterButton:pressed {
+    background-color: rgb(80, 0, 0);
+}
+
+QLineEdit {
+	border: 0;
+	color: rgb(202, 202, 202);
+}</string>
   </property>
   <widget class="QWidget" name="mainWidget">
    <property name="styleSheet">
@@ -300,9 +317,7 @@
        </size>
       </property>
       <property name="styleSheet">
-       <string notr="true">QLineEdit {
-	border: 0;
-}</string>
+       <string notr="true"/>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
@@ -323,7 +338,7 @@
        <item>
         <widget class="QLabel" name="nodeTextLabel">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Access Node&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Internal Network&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -461,6 +476,9 @@
               <family>Arial</family>
              </font>
             </property>
+            <property name="inputMask">
+             <string/>
+            </property>
             <property name="placeholderText">
              <string>Access Code</string>
             </property>
@@ -543,7 +561,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="enterButton">
          <property name="minimumSize">
           <size>
            <width>150</width>
@@ -564,12 +582,7 @@
           </font>
          </property>
          <property name="styleSheet">
-          <string notr="true">QPushButton {
-	background-color: rgb(63, 63, 63);
-	color: rgb(202, 202, 202);
-	border: 0;
-	padding: 5px;
-}</string>
+          <string notr="true"/>
          </property>
          <property name="text">
           <string>Enter</string>
