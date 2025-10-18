@@ -7,6 +7,9 @@
 #include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QUrl>
+#include <QFontDatabase>
+#include <QLabel>
+
 
 
 AuthWindow::AuthWindow(QWidget *parent)
@@ -14,6 +17,16 @@ AuthWindow::AuthWindow(QWidget *parent)
     , ui(new Ui::AuthWindow)
 {
     ui->setupUi(this);
+
+
+    int id = QFontDatabase::addApplicationFont(":/fonts/Corporation.ttf");
+    QString family = QFontDatabase::applicationFontFamilies(id).at(0);
+
+    QFont font(family, 20);
+    ui->logoTextLabel->setFont(font);
+
+    ui->logoTextLabel->setText("Umbrella Corp.");
+    ui->logoTextLabel->setTextFormat(Qt::RichText);
 
     QPixmap bkgnd(":/images/background.jpg");
     bkgnd = bkgnd.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
