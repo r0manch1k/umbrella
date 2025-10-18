@@ -3,6 +3,7 @@
         <file>images/background.jpg</file>
         <file>images/logo.png</file>
         <file>audio/theme.mp3</file>
-        <file>fonts/Corporation.ttf</file>
+        <file>fonts/SerpentineLight.ttf</file>
+        <file>fonts/SerpentineMedium.ttf</file>
     </qresource>
 </RCC>

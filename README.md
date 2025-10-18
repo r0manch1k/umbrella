@@ -4,6 +4,8 @@
 
 ### Usage (MacOS)
 
+Qt=6.9.3
+
 ```sh
 # Configure
 /Users/<user>/Qt/Tools/CMake/CMake.app/Contents/bin/cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH:PATH=/Users/<user>/Qt/6.9.3/macos -DCMAKE_BUILD_TYPE:STRING=Build

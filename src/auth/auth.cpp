@@ -18,15 +18,17 @@ AuthWindow::AuthWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-
-    int id = QFontDatabase::addApplicationFont(":/fonts/Corporation.ttf");
+    int id = QFontDatabase::addApplicationFont(":/fonts/SerpentineLight.ttf");
     QString family = QFontDatabase::applicationFontFamilies(id).at(0);
 
-    QFont font(family, 20);
-    ui->logoTextLabel->setFont(font);
+    QFont fontU(family, 15);
+    ui->titleTextUpperLabel->setFont(fontU);
 
-    ui->logoTextLabel->setText("Umbrella Corp.");
-    ui->logoTextLabel->setTextFormat(Qt::RichText);
+    QFont fontL(family, 15);
+    ui->titleTextLowerLabel->setFont(fontL);
+
+    QFont fontN(family, 25);
+    ui->nodeTextLabel->setFont(fontN);
 
     QPixmap bkgnd(":/images/background.jpg");
     bkgnd = bkgnd.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
