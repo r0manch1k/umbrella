@@ -2,7 +2,7 @@
 #define AUTHWINDOW_H
 
 #include <QMainWindow>
-#include <QMouseEvent>
+#include <QSoundEffect>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class AuthWindow; }
@@ -16,10 +16,11 @@ public:
     AuthWindow(QWidget *parent = nullptr);
     ~AuthWindow();
 
-protected:
-    void mousePressEvent(QMouseEvent *event) override; 
+private slots:
+    void enter();
 
 private:
     Ui::AuthWindow *ui;
+    QSoundEffect *click;
 };
 #endif // AUTHWINDOW_H

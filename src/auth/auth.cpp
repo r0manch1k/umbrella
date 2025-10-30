@@ -1,22 +1,16 @@
 #include "auth.h"
 #include "./ui_auth.h"
+#include "./../main/main.h"
 
 #include <QPixmap>
+#include <QSoundEffect>
 #include <QPalette>
-
 #include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QUrl>
-#include <QFrame>
 #include <QFontDatabase>
-#include <QLabel>
-#include <QShortcut>
-#include <QTextEdit>
-#include <QMouseEvent>
-#include <QWidget>
-#include <QMainWindow>
-#include <QApplication>
-
+#include <QMessageBox>
+#include <QTimer>
 
 
 AuthWindow::AuthWindow(QWidget *parent)
@@ -25,8 +19,7 @@ AuthWindow::AuthWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    int id = QFontDatabase::addApplicationFont(":/fonts/SerpentineLight.ttf");
-    QString family = QFontDatabase::applicationFontFamilies(id).at(0);
+    QString family = QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont(":/fonts/SerpentineLight.ttf")).at(0);
 
     QFont fontU(family, 15);
     ui->titleTextUpperLabel->setFont(fontU);
@@ -37,11 +30,11 @@ AuthWindow::AuthWindow(QWidget *parent)
     QFont fontN(family, 25);
     ui->nodeTextLabel->setFont(fontN);
 
-    QPixmap bkgnd(":/images/background.jpg");
-    bkgnd = bkgnd.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
+    QPixmap bg(":/images/background.jpg");
+    bg = bg.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
 
     QPalette palette;
-    palette.setBrush(QPalette::Window, bkgnd);
+    palette.setBrush(QPalette::Window, bg);
     this->setPalette(palette);
 
     auto *audioOutput = new QAudioOutput(this);
@@ -54,30 +47,38 @@ AuthWindow::AuthWindow(QWidget *parent)
 
     player->play();
 
-    QFrame *overlay = new QFrame(this);
-    overlay->setStyleSheet("background-color: rgba(0, 0, 0, 180);");
-    overlay->setGeometry(0, 0, 300, 600);
-    overlay->hide();
+    click = new QSoundEffect(this);
+    click->setSource(QUrl("qrc:/audio/click.wav"));
+    click->setVolume(0.5);
+    // connect(ui->enterButton, &QPushButton::clicked, this, [this]() {
+    //     click->play();
+    // });
 
-    QTextEdit *console = new QTextEdit(overlay);
-    console->setGeometry(0, 0, 300, 600);
-    console->setStyleSheet("background-color: black; color: lime;");
-
-
-    QShortcut *shortcut = new QShortcut(QKeySequence("~"), this);
-    connect(shortcut, &QShortcut::activated, this, [=]() {
-        overlay->setVisible(!overlay->isVisible());
-    });
+    connect(ui->enterButton, &QPushButton::clicked, this, &AuthWindow::enter);
 }
 
-void AuthWindow::mousePressEvent(QMouseEvent *event)
+
+void AuthWindow::enter()
 {
-    QWidget *focused = QApplication::focusWidget();
-    if (focused && qobject_cast<QLineEdit*>(focused)) {
-        focused->clearFocus();
+    click->play();
+
+    QString secureId = ui->secureIdLineEdit->text();
+    QString password = ui->passwordLineEdit->text();
+
+    if (secureId == "admin" && password == "1234") {
+        auto *main = new MainWindow();
+        this->hide();
+        main->show();
+    } else {
+        auto *m = new QMessageBox(this);
+        m->setIcon(QMessageBox::Critical);
+        m->setText("ACCESS DENIED");
+        m->setWindowTitle("ERROR");
+        m->setModal(true);
+        m->show();
     }
-    QMainWindow::mousePressEvent(event);
 }
+
 
 AuthWindow::~AuthWindow()
 {

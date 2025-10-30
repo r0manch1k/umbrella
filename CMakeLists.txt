@@ -17,6 +17,9 @@ set(PROJECT_SOURCES
         src/auth/auth.cpp
         src/auth/auth.h
         src/auth/auth.ui
+        src/main/main.cpp
+        src/main/main.h
+        src/main/main.ui
         resources/resources.qrc
 )
 
