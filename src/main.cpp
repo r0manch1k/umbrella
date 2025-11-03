@@ -1,6 +1,10 @@
 #include "auth/auth.h"
 
 #include <QApplication>
+#include <QPalette>
+#include <QMediaPlayer>
+#include <QAudioOutput>
+#include <QUrl>
 
 int main(int argc, char *argv[])
 {

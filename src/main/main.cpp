@@ -15,6 +15,13 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    QPixmap bg(":/images/background.jpg");
+    bg = bg.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
+
+    QPalette palette;
+    palette.setBrush(QPalette::Window, bg);
+    this->setPalette(palette);
 }
 
 

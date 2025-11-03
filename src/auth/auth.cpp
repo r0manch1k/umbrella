@@ -19,6 +19,13 @@ AuthWindow::AuthWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QPixmap bg(":/images/background.jpg");
+    bg = bg.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
+
+    QPalette palette;
+    palette.setBrush(QPalette::Window, bg);
+    this->setPalette(palette);
+
     QString family = QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont(":/fonts/SerpentineLight.ttf")).at(0);
 
     QFont fontU(family, 15);
@@ -30,29 +37,17 @@ AuthWindow::AuthWindow(QWidget *parent)
     QFont fontN(family, 25);
     ui->nodeTextLabel->setFont(fontN);
 
-    QPixmap bg(":/images/background.jpg");
-    bg = bg.scaled(this->size(), Qt::KeepAspectRatioByExpanding);
-
-    QPalette palette;
-    palette.setBrush(QPalette::Window, bg);
-    this->setPalette(palette);
-
     auto *audioOutput = new QAudioOutput(this);
     auto *player = new QMediaPlayer(this);
     player->setAudioOutput(audioOutput);
-
     player->setSource(QUrl("qrc:/audio/theme.mp3"));
     player->setLoops(QMediaPlayer::Infinite);
     audioOutput->setVolume(0.25);
-
     player->play();
 
     click = new QSoundEffect(this);
     click->setSource(QUrl("qrc:/audio/click.wav"));
     click->setVolume(0.5);
-    // connect(ui->enterButton, &QPushButton::clicked, this, [this]() {
-    //     click->play();
-    // });
 
     connect(ui->enterButton, &QPushButton::clicked, this, &AuthWindow::enter);
 }
@@ -69,6 +64,7 @@ void AuthWindow::enter()
         auto *main = new MainWindow();
         this->hide();
         main->show();
+        
     } else {
         auto *m = new QMessageBox(this);
         m->setIcon(QMessageBox::Critical);
