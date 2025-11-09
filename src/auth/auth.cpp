@@ -42,12 +42,12 @@ AuthWindow::AuthWindow(QWidget *parent)
     player->setAudioOutput(audioOutput);
     player->setSource(QUrl("qrc:/audio/theme.mp3"));
     player->setLoops(QMediaPlayer::Infinite);
-    audioOutput->setVolume(0.25);
+    audioOutput->setVolume(0.1);
     player->play();
 
     click = new QSoundEffect(this);
     click->setSource(QUrl("qrc:/audio/click.wav"));
-    click->setVolume(0.5);
+    click->setVolume(0.4);
 
     connect(ui->enterButton, &QPushButton::clicked, this, &AuthWindow::enter);
 }
@@ -57,13 +57,13 @@ void AuthWindow::enter()
 {
     click->play();
 
-    QString secureId = ui->secureIdLineEdit->text();
-    QString password = ui->passwordLineEdit->text();
+    QString key = ui->keyLineEdit->text();
 
-    if (secureId == "admin" && password == "1234") {
+    if (key == "1234") {
         auto *main = new MainWindow();
-        this->hide();
+        main->move(this->pos()); 
         main->show();
+        this->hide();
         
     } else {
         auto *m = new QMessageBox(this);

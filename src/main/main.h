@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSoundEffect>
+
+#include "./../redqueen/redqueen.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,8 +19,15 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void about();
+    void quit();
+
 private:
     Ui::MainWindow *ui;
+    RedQueenWidget *redQueen;
+    QSoundEffect *click;
 };
+
 #endif // MAINWINDOW_H
 
