@@ -46,8 +46,15 @@ MainWindow::MainWindow(QWidget *parent)
     click->setSource(QUrl("qrc:/audio/click.wav"));
     click->setVolume(0.4);
 
+    connect(ui->spreadButton, &QPushButton::clicked, this, &MainWindow::spread);
     connect(ui->aboutButton, &QPushButton::clicked, this, &MainWindow::about);
     connect(ui->quitButton, &QPushButton::clicked, this, &MainWindow::quit);
+}
+
+void MainWindow::spread()
+{
+    click->play();
+    redQueen->spread(); 
 }
 
 void MainWindow::about()

@@ -58,6 +58,10 @@ void RedQueenWidget::enter() {
     say("resources/video/enter.mp4");
 }
 
+void RedQueenWidget::spread() {
+    say("resources/video/spread.mp4");
+}
+
 void RedQueenWidget::about() {
     say("resources/video/about.mp4");
 }

@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
         src/main/main.ui
         src/redqueen/redqueen.cpp
         src/redqueen/redqueen.h
+        src/license/license.cpp
+        src/license/license.h
         resources/resources.qrc
 )
 
@@ -49,7 +51,8 @@ else()
     endif()
 endif()
 
-target_link_libraries(umbrella PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::MultimediaWidgets)
+target_include_directories(umbrella PRIVATE /opt/homebrew/opt/openssl@3/include)
+target_link_libraries(umbrella PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::MultimediaWidgets /opt/homebrew/opt/openssl@3/lib/libssl.dylib /opt/homebrew/opt/openssl@3/lib/libcrypto.dylib)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

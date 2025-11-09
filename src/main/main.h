@@ -20,6 +20,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void spread();
     void about();
     void quit();
 

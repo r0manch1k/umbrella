@@ -8,5 +8,6 @@
         <file>audio/click.wav</file>
         <file>fonts/SerpentineLight.ttf</file>
         <file>fonts/SerpentineMedium.ttf</file>
+        <file>keys/public.pem</file>
     </qresource>
 </RCC>

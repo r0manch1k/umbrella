@@ -109,46 +109,73 @@ QTextBrowser {
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="rLabel_1">
+        <widget class="QWidget" name="widget_5" native="true">
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>25</height>
+           <height>0</height>
           </size>
          </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Red Queen</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="rLabel_2">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>13</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>13</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Arial</family>
-          </font>
-         </property>
-         <property name="text">
-          <string>Artificial Intellegence</string>
-         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_6">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="rLabel_1">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Red Queen</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="rLabel_2">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>13</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>13</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Arial</family>
+             </font>
+            </property>
+            <property name="text">
+             <string>Artificial Intellegence</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -631,6 +658,7 @@ QTextBrowser {
  </widget>
  <resources>
   <include location="../../resources/resources.qrc"/>
+  <include location="../../../../../resources/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

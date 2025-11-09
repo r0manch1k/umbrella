@@ -1,6 +1,7 @@
 #include "auth.h"
 #include "./ui_auth.h"
 #include "./../main/main.h"
+#include "../license/license.h"
 
 #include <QPixmap>
 #include <QSoundEffect>
@@ -49,7 +50,20 @@ AuthWindow::AuthWindow(QWidget *parent)
     click->setSource(QUrl("qrc:/audio/click.wav"));
     click->setVolume(0.4);
 
+    ui->logoLabel->installEventFilter(this);
+    
     connect(ui->enterButton, &QPushButton::clicked, this, &AuthWindow::enter);
+
+    licenseManager = new LicenseManager(this);
+}
+
+bool AuthWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == ui->logoLabel && event->type() == QEvent::MouseButtonPress) {
+        buy();
+        return true;
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 
 
@@ -57,22 +71,34 @@ void AuthWindow::enter()
 {
     click->play();
 
-    QString key = ui->keyLineEdit->text();
+    QString key = ui->keyLineEdit->text().trimmed();
 
-    if (key == "1234") {
+    QByteArray signature;
+
+    licenseManager->activateFromServerResponse(key, signature);
+
+    // if (licenseManager->isLicenseValid()) {
+    if (1) {
         auto *main = new MainWindow();
-        main->move(this->pos()); 
+        main->move(this->pos());
         main->show();
         this->hide();
-        
     } else {
-        auto *m = new QMessageBox(this);
-        m->setIcon(QMessageBox::Critical);
-        m->setText("ACCESS DENIED");
-        m->setWindowTitle("ERROR");
-        m->setModal(true);
-        m->show();
+        ui->resLabel->setText("Access Denied");
     }
+}
+
+void AuthWindow::buy()
+{
+    click->play();
+
+    QString userId = "user123";
+    int duration = 30;
+    QString hwFingerprint = "HW1234";
+
+    licenseManager->requestLicenseFromServer(userId, duration, hwFingerprint);
+
+    QMessageBox::information(this, "ACCESS KEY", licenseManager->currentLicense());
 }
 
 
@@ -80,4 +106,3 @@ AuthWindow::~AuthWindow()
 {
     delete ui;
 }
-

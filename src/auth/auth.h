@@ -1,8 +1,12 @@
 #ifndef AUTHWINDOW_H
 #define AUTHWINDOW_H
 
+#include "../license/license.h"
+
 #include <QMainWindow>
 #include <QSoundEffect>
+#include <QObject>
+#include <QEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class AuthWindow; }
@@ -18,9 +22,16 @@ public:
 
 private slots:
     void enter();
+    void buy();
 
 private:
     Ui::AuthWindow *ui;
     QSoundEffect *click;
+    LicenseManager *licenseManager;
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 };
+
 #endif // AUTHWINDOW_H

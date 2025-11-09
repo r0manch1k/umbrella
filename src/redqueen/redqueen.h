@@ -18,6 +18,7 @@ class RedQueenWidget : public QWidget
 public:
     RedQueenWidget(QWidget *parent = nullptr);
     void enter();
+    void spread();
     void about();
     void quit();
 
