@@ -41,6 +41,13 @@ RedQueenWidget::RedQueenWidget(QWidget *parent)
         if (status == QMediaPlayer::EndOfMedia) {
             video->hide();
             player->stop();
+
+            QString path = player->source().toLocalFile();
+            if (path.endsWith("quit.mp4")) {
+                emit s_quit();
+            } else if (path.endsWith("spread.mp4")) {
+                emit s_spread();
+            }
         }
     });
 

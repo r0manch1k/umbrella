@@ -22,6 +22,10 @@ public:
     void about();
     void quit();
 
+signals:
+    void s_quit();
+    void s_spread();
+
 private:
     void say(const QString &path);
 

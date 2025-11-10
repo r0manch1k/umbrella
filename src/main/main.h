@@ -26,7 +26,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    RedQueenWidget *redQueen;
+    RedQueenWidget *rq;
     QSoundEffect *click;
 };
 

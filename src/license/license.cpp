@@ -10,241 +10,238 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 
+#include <QDataStream>
+
 #include <openssl/pem.h>
-#include <openssl/err.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
+#include <openssl/err.h>
+
 
 LicenseManager::LicenseManager(QObject *parent)
     : QObject(parent)
 {
-    qDebug() << "LicenseManager constructor called";
-    networkManager = new QNetworkAccessManager(this);
+    nm = new QNetworkAccessManager(this);
+    load();
 }
 
-void LicenseManager::requestLicenseFromServer(const QString &userId, int duration, const QString &hwFingerprint = QString())
+void LicenseManager::issue(const QString &userId, int duration_hours, const QString &hwFingerprint = QString())
 {
-    qDebug() << "requestLicenseFromServer called with userId:" << userId << "duration:" << duration << "hwFingerprint:" << hwFingerprint;
-    QUrl url("http://127.0.0.1:5000/license/issue");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    qDebug() << "issue";
 
-    QJsonObject obj;
-    obj["user_id"] = userId;
-    obj["duration"] = duration;
+    QNetworkRequest req;
+    req.setUrl(QUrl("http://127.0.0.1:5000/license/issue"));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QJsonObject reqo;
+    reqo["user_id"] = userId;
+    reqo["duration_hours"] = duration_hours;
     if (!hwFingerprint.isEmpty())
-        obj["hw_fingerprint"] = hwFingerprint;
+        reqo["hw_fingerprint"] = hwFingerprint;
 
-    QJsonDocument doc(obj);
-    QByteArray data = doc.toJson(QJsonDocument::Compact);
+    QJsonDocument reqd(reqo);
+    QByteArray reqba = reqd.toJson(QJsonDocument::Compact);
 
-    qDebug() << "Requesting license from server:";
-    qDebug() << "URL:" << url.toString();
-    qDebug() << "Request JSON:" << QString::fromUtf8(data);
+    qDebug() << "post /license/isuue";
+    qDebug() << "json:" << QString::fromUtf8(reqba);
 
-    QNetworkReply *reply = networkManager->post(request, data);
+    QNetworkReply *res = nm->post(req, reqba);
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        qDebug() << "License request finished.";
-        qDebug() << "HTTP status code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        qDebug() << "Network reply error:" << reply->error() << "-" << reply->errorString();
+    connect(res, &QNetworkReply::finished, this, [this, res]() {
+        qDebug() << "response";
+        qDebug() << "status:" << res->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "error:" << res->error() << "-" << res->errorString();
 
-        QByteArray responseData = reply->readAll();
-        qDebug() << "Response body:" << QString::fromUtf8(responseData);
+        QByteArray resba = res->readAll();
+        qDebug() << "body:" << QString::fromUtf8(resba);
 
-        QJsonDocument respDoc = QJsonDocument::fromJson(responseData);
-        if (respDoc.isNull()) {
-            qDebug() << "Response is not a valid JSON document.";
-        } else if (!respDoc.isObject()) {
-            qDebug() << "Response JSON is not an object.";
+        QJsonDocument resd = QJsonDocument::fromJson(resba);
+        if (resd.isNull()) {
+            qDebug() << "null";
+        } else if (!resd.isObject()) {
+            qDebug() << "not an object.";
         } else {
-            QJsonObject respObj = respDoc.object();
-            qDebug() << "Response JSON object keys:" << respObj.keys();
-            if (!respObj.contains("license")) {
-                qDebug() << "Response JSON does not contain 'license' key.";
+            QJsonObject reso = resd.object();
+            qDebug() << "response json fields" << reso.keys();
+            if (!reso.contains("license")) {
+                qDebug() << "no license key";
             }
-            if (!respObj.contains("signature")) {
-                qDebug() << "Response JSON does not contain 'signature' key.";
+            if (!reso.contains("signature")) {
+                qDebug() << "no signature key";
             }
-            if (reply->error() == QNetworkReply::NoError) {
-                QString licenseJson = respObj["license"].toString();
-                QByteArray signature = QByteArray::fromBase64(respObj["signature"].toString().toUtf8());
-                qDebug() << "License JSON received:" << licenseJson;
-                qDebug() << "Signature (base64 decoded):" << signature.toHex();
+            if (res->error() == QNetworkReply::NoError) {
+                QString l = reso["license"].toString();
+                QByteArray s = QByteArray::fromBase64(reso["signature"].toString().toUtf8());
+                qDebug() << "license" << l;
+                qDebug() << "signature" << s.toHex();
 
-                activateFromServerResponse(licenseJson, signature);
+                // activateFromServerResponse(l, s);
             }
         }
 
-        reply->deleteLater();
+        res->deleteLater();
     });
 }
 
-void LicenseManager::verifyLicenseWithServer()
+void LicenseManager::verify()
 {
-    qDebug() << "verifyLicenseWithServer called";
-    if (m_licenseData.isEmpty() || m_signature.isEmpty()) {
-        qDebug() << "No license data or signature to verify";
+    qDebug() << "verify";
+
+    if (m_l.isEmpty() || m_s.isEmpty()) {
+        qDebug() << "no license";
         return;
     }
 
-    QUrl url("http://127.0.0.1:5000/license/verify");
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QNetworkRequest req;
+    req.setUrl(QUrl("http://127.0.0.1:5000/license/verify"));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    QJsonObject obj;
-    obj["license"] = QString::fromUtf8(m_licenseData);
-    obj["signature"] = QString::fromUtf8(m_signature.toBase64());
+    QJsonObject reqo;
+    reqo["license"] = QString::fromUtf8(m_l);
+    reqo["signature"] = QString::fromUtf8(m_s.toBase64());
 
-    qDebug() << "Sending verification request with license:" << obj["license"];
-    qDebug() << "Sending verification request with signature (base64):" << obj["signature"];
+    qDebug() << "req license:" << reqo["license"];
+    qDebug() << "req signature (base64):" << reqo["signature"];
 
-    QNetworkReply *reply = networkManager->post(request, QJsonDocument(obj).toJson());
+    QNetworkReply *res = nm->post(req, QJsonDocument(reqo).toJson());
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() == QNetworkReply::NoError) {
-            QByteArray responseData = reply->readAll();
-            qDebug() << "Verification response data:" << QString::fromUtf8(responseData);
-            QJsonDocument doc = QJsonDocument::fromJson(responseData);
-            if (!doc.isNull() && doc.object().contains("valid")) {
-                bool valid = doc.object()["valid"].toBool();
-                m_valid = valid;
-                qDebug() << "Server license check result:" << valid;
+    connect(res, &QNetworkReply::finished, this, [this, res]() {
+        if (res->error() == QNetworkReply::NoError) {
+            QByteArray resba = res->readAll();
+            qDebug() << "response data:" << QString::fromUtf8(resba);
+            QJsonDocument resd = QJsonDocument::fromJson(resba);
+            if (!resd.isNull() && resd.object().contains("valid")) {
+                bool v = resd.object()["valid"].toBool();
+                // m_v = v;
+                qDebug() << "license check result:" << v;
             } else {
-                qDebug() << "Verification response JSON invalid or missing 'valid' key";
+                qDebug() << "no valid key";
             }
         } else {
-            qDebug() << "License verify error:" << reply->errorString();
+            qDebug() << "error:" << res->errorString();
         }
-        reply->deleteLater();
+        res->deleteLater();
     });
 }
 
-QByteArray LicenseManager::loadPublicKey() const
+
+void LicenseManager::save(const QByteArray &l, const QByteArray &s)
 {
-    qDebug() << "loadPublicKey called";
-    QFile f(":/keys/public.pem");
-    if (!f.open(QIODevice::ReadOnly))
+    qDebug() << "save";
+    qDebug() << "license size:" << l.size() << "signature size:" << s.size();
+    QFile f(".l");
+    if (f.open(QIODevice::WriteOnly))
     {
-        qWarning() << "Cannot open public.pem";
-        return {};
+        QDataStream out(&f);
+        out << quint32(s.size());
+        if (!s.isEmpty()) out.writeRawData(s.constData(), s.size());
+        out << quint32(l.size());
+        if (!l.isEmpty()) out.writeRawData(s.constData(), s.size());
+        f.close();
+        qDebug() << "saved to .l";
     }
-    QByteArray keyData = f.readAll();
-    qDebug() << "Public key loaded, size:" << keyData.size();
-    return keyData;
+    else {
+        qDebug() << "saved to .l";
+    }
+
+    m_l = l;
+    if (!s.isEmpty()) m_s = s;
+
+    qDebug() << "saved";
 }
 
-bool LicenseManager::verifySignature(const QByteArray &payload, const QByteArray &sig)
+void LicenseManager::load()
 {
-    qDebug() << "verifySignature called with payload size:" << payload.size() << "signature size:" << sig.size();
-    QByteArray pubKeyData = loadPublicKey();
-    if (pubKeyData.isEmpty()) {
-        qDebug() << "Public key data is empty, cannot verify signature";
+    qDebug() << "load";
+    QFile f(".l");
+    if (!f.exists()) {
+        qDebug() << ".l not found";
+        return;
+    }
+    if (f.open(QIODevice::ReadOnly))
+    {
+        QDataStream in(&f);
+        quint32 siglen = 0;
+        in >> siglen;
+        QByteArray s;
+        if (siglen > 0) {
+            s.resize(siglen);
+            in.readRawData(s.data(), siglen);
+        }
+        quint32 liclen = 0;
+        in >> liclen;
+        QByteArray l;
+        if (liclen > 0) {
+            l.resize(liclen);
+            in.readRawData(l.data(), liclen);
+        }
+        f.close();
+
+        qDebug() << "Loaded license.bin, license size:" << l.size() << "signature size:" << s.size();
+
+        if (!l.isEmpty()) {
+            m_l = l;
+            if (!s.isEmpty()) m_s = s;
+
+            // Optionally, verify signature locally if verifySignature is available
+            if (!m_s.isEmpty()) {
+                if (issigned(m_l, m_s)) {
+                    // m_valid = true;
+                    qDebug() << "Loaded license: signature valid";
+                } else {
+                    // m_valid = false;
+                    qDebug() << "Loaded license: signature invalid";
+                }
+            }
+        }
+    }
+    else {
+        qDebug() << "Failed to open license.bin for reading";
+    }
+}
+
+bool LicenseManager::issigned(const QByteArray &l, const QByteArray &s)
+{
+    qDebug() << "issigned() — verifying license using embedded public.pem";
+
+    QFile f(":/keys/public.pem");
+    if (!f.open(QIODevice::ReadOnly)) {
+        qDebug() << "Cannot open embedded public.pem";
+        return false;
+    }
+    QByteArray keyData = f.readAll();
+    f.close();
+
+    BIO *bio = BIO_new_mem_buf(keyData.data(), keyData.size());
+    if (!bio) {
+        qDebug() << "BIO_new_mem_buf failed";
         return false;
     }
 
-    BIO *bio = BIO_new_mem_buf(pubKeyData.constData(), pubKeyData.size());
     RSA *rsa = PEM_read_bio_RSA_PUBKEY(bio, nullptr, nullptr, nullptr);
     BIO_free(bio);
 
     if (!rsa) {
-        qDebug() << "Failed to load RSA public key";
+        qDebug() << "PEM_read_bio_RSA_PUBKEY failed:" << ERR_error_string(ERR_get_error(), nullptr);
         return false;
     }
 
-    bool result = false;
     unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256(reinterpret_cast<const unsigned char*>(payload.constData()), payload.size(), hash);
-    qDebug() << "SHA256 hash computed for payload";
+    SHA256(reinterpret_cast<const unsigned char*>(l.constData()), l.size(), hash);
 
-    int rc = RSA_verify(NID_sha256, hash, SHA256_DIGEST_LENGTH,
-                        reinterpret_cast<const unsigned char*>(sig.constData()),
-                        sig.size(), rsa);
-    if (rc == 1) {
-        result = true;
-        qDebug() << "Signature verification succeeded";
-    } else {
-        qDebug() << "Signature verification failed";
-    }
+    int res = RSA_verify(NID_sha256,
+                         hash, SHA256_DIGEST_LENGTH,
+                         reinterpret_cast<const unsigned char*>(s.constData()), s.size(),
+                         rsa);
 
     RSA_free(rsa);
-    return result;
+
+    return res > 0;
 }
 
-void LicenseManager::saveLicense(const QString &licenseJson)
+
+QString LicenseManager::license() const
 {
-    qDebug() << "saveLicense called with licenseJson size:" << licenseJson.size();
-    QFile f("license.json");
-    if (f.open(QIODevice::WriteOnly))
-    {
-        f.write(licenseJson.toUtf8());
-        f.close();
-        qDebug() << "License saved to file license.json";
-    }
-    else {
-        qDebug() << "Failed to open license.json for writing";
-    }
-
-    m_licenseData = licenseJson.toUtf8();
-    QJsonDocument doc = QJsonDocument::fromJson(m_licenseData);
-    if (!doc.isNull())
-    {
-        QJsonObject obj = doc.object();
-        if (obj.contains("expires")) {
-            m_expiration = QDateTime::fromString(obj["expires"].toString(), Qt::ISODate);
-            qDebug() << "License expiration set to:" << m_expiration.toString(Qt::ISODate);
-        } else {
-            qDebug() << "License JSON does not contain 'expires' field";
-        }
-    }
-    else {
-        qDebug() << "License JSON is invalid";
-    }
-    m_valid = true;
-    qDebug() << "License marked as valid";
-}
-
-bool LicenseManager::isLicenseValid() const
-{
-    qDebug() << "isLicenseValid called, m_valid:" << m_valid << "isExpired():" << isExpired();
-    return m_valid && !isExpired();
-}
-
-bool LicenseManager::isExpired() const
-{
-    qDebug() << "isExpired called, expiration date:" << m_expiration.toString(Qt::ISODate);
-    if (!m_expiration.isValid()) {
-        qDebug() << "Expiration date is invalid, license considered expired";
-        return true;
-    }
-    bool expired = QDateTime::currentDateTimeUtc() > m_expiration;
-    qDebug() << "Current UTC datetime:" << QDateTime::currentDateTimeUtc().toString(Qt::ISODate) << "expired:" << expired;
-    return expired;
-}
-
-void LicenseManager::activateFromServerResponse(const QString &licenseJson, const QByteArray &signature)
-{
-    qDebug() << "activateFromServerResponse called";
-    qDebug() << "License JSON size:" << licenseJson.size();
-    qDebug() << "Signature size:" << signature.size();
-
-    if (verifySignature(licenseJson.toUtf8(), signature))
-    {
-        qDebug() << "Signature verified successfully, saving license";
-        saveLicense(licenseJson);
-        m_signature = signature;
-        m_valid = true;
-        qDebug() << "License activated and marked valid";
-    }
-    else
-    {
-        m_valid = false;
-        qDebug() << "Signature verification failed, license not activated";
-    }
-}
-
-QString LicenseManager::currentLicense() const
-{
-    qDebug() << "currentLicense called, license data size:" << m_licenseData.size();
-    return QString::fromUtf8(m_licenseData);
+    qDebug() << "currentLicense called, license data size:" << m_l.size();
+    return QString::fromUtf8(m_l);
 }

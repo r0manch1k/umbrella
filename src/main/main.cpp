@@ -38,9 +38,17 @@ MainWindow::MainWindow(QWidget *parent)
 
     QVBoxLayout *layout = new QVBoxLayout(ui->rWidget);
 
-    redQueen = new RedQueenWidget(this);
-    layout->addWidget(redQueen);
+    rq = new RedQueenWidget(this);
+    layout->addWidget(rq);
     layout->setContentsMargins(0, 0, 0, 0);
+
+    connect(rq, &RedQueenWidget::s_quit, this, [](){
+        QApplication::quit();
+    });
+
+    connect(rq, &RedQueenWidget::s_spread, this, [](){
+        QApplication::quit();
+    });
 
     click = new QSoundEffect(this);
     click->setSource(QUrl("qrc:/audio/click.wav"));
@@ -54,19 +62,19 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::spread()
 {
     click->play();
-    redQueen->spread(); 
+    rq->spread(); 
 }
 
 void MainWindow::about()
 {
     click->play();
-    redQueen->about(); 
+    rq->about(); 
 }
 
 void MainWindow::quit()
 {
     click->play();
-    redQueen->quit(); 
+    rq->quit(); 
 }
 
 

@@ -75,7 +75,7 @@ void AuthWindow::enter()
 
     QByteArray signature;
 
-    licenseManager->activateFromServerResponse(key, signature);
+    licenseManager->verify();
 
     // if (licenseManager->isLicenseValid()) {
     if (1) {
@@ -96,9 +96,9 @@ void AuthWindow::buy()
     int duration = 30;
     QString hwFingerprint = "HW1234";
 
-    licenseManager->requestLicenseFromServer(userId, duration, hwFingerprint);
+    licenseManager->issue(userId, duration, hwFingerprint);
 
-    QMessageBox::information(this, "ACCESS KEY", licenseManager->currentLicense());
+    QMessageBox::information(this, "ACCESS KEY", licenseManager->license());
 }
 
 

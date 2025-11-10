@@ -22,21 +22,20 @@ class LicenseManager : public QObject
 
 public:
     explicit LicenseManager(QObject *parent = nullptr);
-    void requestLicenseFromServer(const QString &userId, int duration, const QString &hwFingerprint);
-    void activateFromServerResponse(const QString &licenseJson, const QByteArray &signature);
-    void verifyLicenseWithServer();
-    bool verifySignature(const QByteArray &payload, const QByteArray &sig);
-    void saveLicense(const QString &licenseJson);
+    void issue(const QString &userId, int duration_hours, const QString &hwFingerprint);
+    void verify();
+    void save(const QByteArray &l, const QByteArray &s);
+    void load();
+    bool issigned(const QByteArray &l, const QByteArray &s);
     bool isLicenseValid() const;
     bool isExpired() const;
-    QString currentLicense() const;
+    QString license() const;
 
 private:
-    QByteArray m_licenseData;
-    QByteArray m_signature;
-    QDateTime m_expiration;
-    bool m_valid = false;
-    QNetworkAccessManager *networkManager;
+    QByteArray m_l;
+    QByteArray m_s;
+    QDateTime m_exp;
+    QNetworkAccessManager *nm;
     QByteArray loadPublicKey() const;
 };
 #endif // LICENSEMANAGER_H
