@@ -14,7 +14,6 @@ func initClients(cfg *config.Config) (Clients, error) {
 	if err != nil {
 		return Clients{}, err
 	}
-	defer pg.Close()
 
 	return Clients{
 		PgSql: pg,
