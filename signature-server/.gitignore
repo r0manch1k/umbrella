@@ -232,4 +232,6 @@ Temporary Items
 
 .env
 
+*.pem
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,goland,goland+all,go
