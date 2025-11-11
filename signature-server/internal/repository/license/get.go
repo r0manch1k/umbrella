@@ -36,6 +36,7 @@ func (r *Repository) GetByFingerprint(ctx context.Context, license, fingerprint 
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
+
 		return nil, err
 	}
 

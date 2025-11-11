@@ -7,6 +7,6 @@ import (
 )
 
 type LicenseRepository interface {
-	Save(ctx context.Context, license entity.License) error
+	Save(ctx context.Context, license *entity.License) error
 	GetByFingerprint(ctx context.Context, license, fingerprint string) (*entity.License, error)
 }
