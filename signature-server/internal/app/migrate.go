@@ -5,68 +5,62 @@ package app
 import (
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/r0manch1k/umbrella/signature-server/config"
+	"github.com/r0manch1k/umbrella/signature-server/pkg/logger"
 )
 
 const (
-	_defaultAttempts = 20
-	_defaultTimeout  = time.Second
+	defaultAttempts = 20
+	defaultTimeout  = time.Second
+	migrationsPath  = "file://migrations"
 )
 
 func init() {
-	var (
-		attempts = _defaultAttempts
-		err      error
-		m        *migrate.Migrate
-	)
-
 	cfg, err := config.NewConfig()
 	if err != nil {
-		panic(fmt.Errorf("config error: %s", err))
+		panic(fmt.Errorf("config error: %w", err))
 	}
 
-	dbUrl := cfg.DB.URL() + "?sslmode=disable"
+	l := logger.New(cfg.Log.Level, cfg.App.TZ)
 
-	for attempts > 0 {
-		m, err = migrate.New("file://migrations", dbUrl)
+	dbURL := cfg.DB.URL() + "?sslmode=disable"
+
+	var m *migrate.Migrate
+	for attempts := defaultAttempts; attempts > 0; attempts-- {
+		m, err = migrate.New(migrationsPath, dbURL)
 		if err == nil {
 			break
 		}
 
-		log.Printf("Migrate: postgres is trying to connect, attempts left: %d", attempts)
-		log.Printf(dbUrl)
-
-		time.Sleep(_defaultTimeout)
-		attempts--
+		l.Error("Migrate: postgres is trying to connect, attempts left: %d", attempts)
+		time.Sleep(defaultTimeout)
 	}
 
 	if err != nil {
-		log.Fatalf("Migrate: postgres connect error: %s", err)
+		l.Fatal("Migrate: postgres connect error: %s", err)
 	}
 
+	// Выполняем миграции
 	err = m.Up()
-	defer func(m *migrate.Migrate) {
-		err, _ := m.Close()
-		if err != nil {
-			log.Fatalf("Migrate: postgres connection error: %s", err)
-		}
-	}(m)
-
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatalf("Migrate: up error: %s", err)
+		l.Fatal("Migrate: up error: %s", err)
+	}
+
+	// Закрываем соединение с миграциями
+	if closeErr, _ := m.Close(); closeErr != nil {
+		l.Fatal("Migrate: close connection error: %s", closeErr)
 	}
 
 	if errors.Is(err, migrate.ErrNoChange) {
-		log.Printf("Migrate: no change")
+		l.Info("Migrate: no change")
 
 		return
 	}
 
-	log.Printf("Migrate: up success")
+	l.Info("Migrate: up success")
 }
