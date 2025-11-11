@@ -10,7 +10,7 @@ type Controllers struct {
 }
 
 func initControllers(l *logger.Logger, useCases UseCases) Controllers {
-	httpRt := http.NewRouter(l, useCases.License, useCases.KeyPair)
+	httpRt := http.NewRouter(l, useCases.License)
 
 	return Controllers{HTTP: httpRt}
 }

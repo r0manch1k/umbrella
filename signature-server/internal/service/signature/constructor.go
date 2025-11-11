@@ -1,6 +1,7 @@
 package signature
 
 import (
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -12,7 +13,11 @@ import (
 )
 
 const (
-	nonceSize = 16
+	nonceSize                      = 16
+	privateKeyPEMType  string      = "PRIVATE KEY"
+	publicKeyPEMType   string      = "PUBLIC KEY"
+	privateKeyFilePerm os.FileMode = 0o600
+	publicKeyFilePerm  os.FileMode = 0o644
 )
 
 var _ service.SignatureService = (*Service)(nil)
@@ -25,23 +30,33 @@ type Service struct {
 	licenseRepo repository.LicenseRepository
 }
 
-func New(privateKeyPath, product string, repo repository.LicenseRepository) (*Service, error) {
+// New создаёт сервис и автоматически генерирует ключи, если их нет.
+func New(privateKeyPath, publicKeyPath, product string, privateKeyBits int, repo repository.LicenseRepository) (*Service, error) {
+	s := &Service{
+		product:     product,
+		licenseRepo: repo,
+	}
+
+	if !fileExists(privateKeyPath) || !fileExists(publicKeyPath) {
+		if err := generateAndSaveKeyPair(privateKeyPath, publicKeyPath, privateKeyBits); err != nil {
+			return nil, err
+		}
+	}
+
 	privateKey, err := loadPrivateKey(privateKeyPath)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Service{
-		privateKey:  privateKey,
-		publicKey:   &privateKey.PublicKey,
-		product:     product,
-		licenseRepo: repo,
-	}, nil
+	s.privateKey = privateKey
+	s.publicKey = &privateKey.PublicKey
+
+	return s, nil
 }
 
 // loadPrivateKey считывает приватный ключ из PEM-файла и парсит его.
-func loadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
-	raw, err := os.ReadFile(privateKeyPath)
+func loadPrivateKey(path string) (*rsa.PrivateKey, error) {
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +66,13 @@ func loadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 		return nil, exception.ErrInvalidPrivateKey
 	}
 
-	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err == nil {
-		if rsaKey, ok := key.(*rsa.PrivateKey); ok {
-			return rsaKey, nil
+	if key, err := x509.ParsePKCS8PrivateKey(block.Bytes); err == nil {
+		rsaKey, ok := key.(*rsa.PrivateKey)
+		if !ok {
+			return nil, exception.ErrUnsupportedKeyType
 		}
 
-		return nil, exception.ErrUnsupportedKeyType
+		return rsaKey, nil
 	}
 
 	rsaKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
@@ -66,4 +81,44 @@ func loadPrivateKey(privateKeyPath string) (*rsa.PrivateKey, error) {
 	}
 
 	return rsaKey, nil
+}
+
+// generateAndSaveKeyPair генерирует RSA ключи и сохраняет их в файлы.
+func generateAndSaveKeyPair(privateKeyPath, publicKeyPath string, privateKeyBits int) error {
+	privateKey, err := rsa.GenerateKey(rand.Reader, privateKeyBits)
+	if err != nil {
+		return err
+	}
+
+	privateBytes := x509.MarshalPKCS1PrivateKey(privateKey)
+	privatePEM := pem.EncodeToMemory(&pem.Block{
+		Type:  privateKeyPEMType,
+		Bytes: privateBytes,
+	})
+
+	if err := os.WriteFile(privateKeyPath, privatePEM, privateKeyFilePerm); err != nil {
+		return err
+	}
+
+	pubBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	pubPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  publicKeyPEMType,
+		Bytes: pubBytes,
+	})
+
+	if err := os.WriteFile(publicKeyPath, pubPEM, publicKeyFilePerm); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+
+	return err == nil
 }

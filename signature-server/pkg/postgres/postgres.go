@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
@@ -16,9 +16,11 @@ const (
 	_defaultConnTimeout  = time.Second
 )
 
-// Postgres -.
+var ErrConnAttemptsExceeded = errors.New("postgres - connAttempts == 0")
+
+// Postgres представляет соединение с PostgreSQL и предоставляет пул соединений.
 type Postgres struct {
-	maxPoolSize  int
+	maxPoolSize  int32
 	connAttempts int
 	connTimeout  time.Duration
 
@@ -26,7 +28,7 @@ type Postgres struct {
 	Pool    *pgxpool.Pool
 }
 
-// New -.
+// New создаёт новый объект Postgres, настраивает пул соединений и подключается к базе.
 func New(url string, sslMode bool, opts ...Option) (*Postgres, error) {
 	pg := &Postgres{
 		maxPoolSize:  _defaultMaxPoolSize,
@@ -48,10 +50,10 @@ func New(url string, sslMode bool, opts ...Option) (*Postgres, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(url)
 	if err != nil {
-		return nil, fmt.Errorf("postgres - NewPostgres - pgxpool.ParseConfig: %w", err)
+		return nil, err
 	}
 
-	poolConfig.MaxConns = int32(pg.maxPoolSize)
+	poolConfig.MaxConns = pg.maxPoolSize
 
 	for pg.connAttempts > 0 {
 		pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolConfig)
@@ -60,20 +62,18 @@ func New(url string, sslMode bool, opts ...Option) (*Postgres, error) {
 		}
 
 		log.Printf("Postgres is trying to connect, attempts left: %d", pg.connAttempts)
-
 		time.Sleep(pg.connTimeout)
-
 		pg.connAttempts--
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("postgres - NewPostgres - connAttempts == 0: %w", err)
+		return nil, ErrConnAttemptsExceeded
 	}
 
 	return pg, nil
 }
 
-// Close -.
+// Close закрывает пул соединений с базой данных.
 func (p *Postgres) Close() {
 	if p.Pool != nil {
 		p.Pool.Close()

@@ -15,20 +15,8 @@ func NewLicenseRoutes(
 
 	licenseGroup := v1Group.Group("/license")
 	{
-		licenseGroup.POST("/issue", controller.licenseIssue)
-		licenseGroup.POST("/verify", controller.licenseVerify)
-	}
-}
-
-func NewKeypairRoutes(
-	v1Group *router.Group,
-	l logger.Interface,
-	keypairUC usecase.KeyPairUseCase,
-) {
-	controller := &V1{l: l, keypairUC: keypairUC}
-
-	keypairGroup := v1Group.Group("/keypair")
-	{
-		keypairGroup.GET("/public.pem", controller.getPublicKey)
+		licenseGroup.POST("/issue", controller.issue)
+		licenseGroup.POST("/verify", controller.verify)
+		licenseGroup.GET("/public.pem", controller.getPublicKey)
 	}
 }

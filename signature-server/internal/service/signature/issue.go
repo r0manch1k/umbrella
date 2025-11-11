@@ -11,11 +11,23 @@ import (
 	"time"
 
 	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
+	"github.com/r0manch1k/umbrella/signature-server/internal/exception"
 )
 
 func (s *Service) Issue(fingerprint string, duration time.Duration) (string, error) {
-	now := time.Now().UTC()
-	license := entity.License{
+	ctx := context.Background()
+	now := time.Now()
+
+	existing, err := s.licenseRepo.GetByFingerprint(ctx, fingerprint)
+	if err != nil {
+		return "", err
+	}
+
+	if existing != nil && existing.Activated && existing.ExpiresAt.After(now) {
+		return "", exception.ErrLicenseAlreadyActivatedAndNotExpired
+	}
+
+	license := &entity.License{
 		Fingerprint: fingerprint,
 		Product:     s.product,
 		IssuedAt:    now,
@@ -25,10 +37,16 @@ func (s *Service) Issue(fingerprint string, duration time.Duration) (string, err
 	}
 
 	if s.licenseRepo != nil {
-		_ = s.licenseRepo.Save(context.Background(), license)
+		if err := s.licenseRepo.Save(ctx, license); err != nil {
+			return "", err
+		}
 	}
 
-	jb, _ := json.Marshal(license)
+	jb, err := json.Marshal(license)
+	if err != nil {
+		return "", err
+	}
+
 	hash := sha256.Sum256(jb)
 
 	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])

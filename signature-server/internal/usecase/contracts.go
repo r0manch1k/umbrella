@@ -6,15 +6,16 @@ import (
 	"github.com/r0manch1k/umbrella/signature-server/internal/dto"
 )
 
+// LicenseUseCase описывает бизнес-логику работы с лицензиями.
 type LicenseUseCase interface {
-	// Issue — метод для выдачи лицензий.
+	// Issue выдаёт лицензию на основе запроса dto.LicenseIssueRequest.
+	// Возвращает dto.LicenseIssueResponse с данными лицензии или ошибку.
 	Issue(ctx context.Context, req dto.LicenseIssueRequest) (dto.LicenseIssueResponse, error)
 
-	// Verify — метод для проверки подлинности лицензий.
+	// Verify проверяет подлинность лицензии на основе запроса dto.LicenseVerifyRequest.
+	// Возвращает dto.LicenseVerifyResponse с результатом проверки или ошибку.
 	Verify(ctx context.Context, req dto.LicenseVerifyRequest) (dto.LicenseVerifyResponse, error)
-}
 
-type KeyPairUseCase interface {
-	GenerateAndSaveKeyPair() error
+	// GetPublicKey возвращает публичный ключ сервиса для проверки лицензий.
 	GetPublicKey() ([]byte, error)
 }

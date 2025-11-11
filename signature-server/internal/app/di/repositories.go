@@ -10,7 +10,7 @@ type Repositories struct {
 }
 
 func initRepositories(clients Clients) Repositories {
-	licenseRepo := license.New(clients.PgSql)
+	licenseRepo := license.New(clients.PgSQL)
 
 	return Repositories{License: licenseRepo}
 }

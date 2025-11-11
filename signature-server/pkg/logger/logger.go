@@ -21,7 +21,7 @@ type Logger struct {
 	logger *zerolog.Logger
 }
 
-func New(level, tz string) *Logger {
+func New(level string) *Logger {
 	parsedLevel, err := zerolog.ParseLevel(strings.ToLower(level))
 	if err != nil {
 		panic(err)
@@ -36,12 +36,7 @@ func New(level, tz string) *Logger {
 		return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
 	}
 
-	parsedLocation, err := time.LoadLocation(tz)
-	if err != nil {
-		panic(err)
-	}
-
-	writer.TimeLocation = parsedLocation
+	writer.TimeLocation = time.Local
 
 	logger := zerolog.New(writer).With().Timestamp().Logger()
 

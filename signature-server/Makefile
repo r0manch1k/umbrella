@@ -48,5 +48,4 @@ lint: ## Анализ кода с помощью golangci-lint (поиск ош�
 .PHONY: fix
 fix: ## Автоматическое исправление стиля кода (golangci-lint)
 	@$(COMPOSE) exec app golangci-lint run --fix
-	@$(COMPOSE) exec app gofumpt -l -w .
-	@$(COMPOSE) exec app gci write . --skip-generated -s standard -s default
+	@$(COMPOSE) exec app golangci-lint fmt

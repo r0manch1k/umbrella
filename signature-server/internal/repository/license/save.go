@@ -6,7 +6,7 @@ import (
 	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
 )
 
-func (r *Repository) Save(ctx context.Context, license entity.License) error {
+func (r *Repository) Save(ctx context.Context, license *entity.License) error {
 	query, args, err := r.builder.
 		Insert("licenses").
 		Columns("fingerprint", "product", "issued_at", "expires_at", "nonce", "activated").
@@ -23,5 +23,6 @@ func (r *Repository) Save(ctx context.Context, license entity.License) error {
 	}
 
 	_, execErr := r.db.Pool.Exec(ctx, query, args...)
+
 	return execErr
 }
