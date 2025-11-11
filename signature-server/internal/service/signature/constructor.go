@@ -31,14 +31,14 @@ type Service struct {
 }
 
 // New создаёт сервис и автоматически генерирует ключи, если их нет.
-func New(privateKeyPath, publicKeyPath, product string, rsaKeyBits int, repo repository.LicenseRepository) (*Service, error) {
+func New(privateKeyPath, publicKeyPath, product string, privateKeyBits int, repo repository.LicenseRepository) (*Service, error) {
 	s := &Service{
 		product:     product,
 		licenseRepo: repo,
 	}
 
 	if !fileExists(privateKeyPath) || !fileExists(publicKeyPath) {
-		if err := generateAndSaveKeyPair(privateKeyPath, publicKeyPath, rsaKeyBits); err != nil {
+		if err := generateAndSaveKeyPair(privateKeyPath, publicKeyPath, privateKeyBits); err != nil {
 			return nil, err
 		}
 	}
@@ -84,8 +84,8 @@ func loadPrivateKey(path string) (*rsa.PrivateKey, error) {
 }
 
 // generateAndSaveKeyPair генерирует RSA ключи и сохраняет их в файлы.
-func generateAndSaveKeyPair(privateKeyPath, publicKeyPath string, rsaKeyBits int) error {
-	privateKey, err := rsa.GenerateKey(rand.Reader, rsaKeyBits)
+func generateAndSaveKeyPair(privateKeyPath, publicKeyPath string, privateKeyBits int) error {
+	privateKey, err := rsa.GenerateKey(rand.Reader, privateKeyBits)
 	if err != nil {
 		return err
 	}

@@ -15,7 +15,7 @@ func initServices(cfg *config.Config, repositories Repositories) (Services, erro
 		cfg.Signature.PrivateKeyPath,
 		cfg.Signature.PublicKeyPath,
 		cfg.Signature.Product,
-		cfg.Signature.RSAKeyBits,
+		cfg.Signature.PrivateKeyBits,
 		repositories.License,
 	)
 	if err != nil {

@@ -30,7 +30,7 @@ type (
 		PrivateKeyPath string `env:"SIGNATURE_PRIVATE_KEY_PATH,required"`
 		PublicKeyPath  string `env:"SIGNATURE_PUBLIC_KEY_PATH,required"`
 		Product        string `env:"SIGNATURE_PRODUCT,required"`
-		RSAKeyBits     int    `env:"SIGNATURE_RSA_KEY_BITS" envDefault:"2048"`
+		PrivateKeyBits int    `env:"SIGNATURE_PRIVATE_KEY_BITS" envDefault:"2048"`
 	}
 
 	DB struct {
