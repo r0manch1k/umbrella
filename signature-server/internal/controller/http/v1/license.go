@@ -2,8 +2,10 @@ package v1
 
 import (
 	"context"
+	"errors"
 
 	"github.com/r0manch1k/umbrella/signature-server/internal/dto"
+	"github.com/r0manch1k/umbrella/signature-server/internal/exception"
 	httputil "github.com/r0manch1k/umbrella/signature-server/pkg/servers/httpserver"
 	"github.com/valyala/fasthttp"
 )
@@ -18,8 +20,14 @@ func (controller *V1) issue(ctx *fasthttp.RequestCtx) {
 
 	resp, err := controller.licenseUc.Issue(context.Background(), req)
 	if err != nil {
-		controller.l.Error("issue: internal error: %v", err)
-		httputil.RespondError(ctx, fasthttp.StatusInternalServerError, err)
+		switch {
+		case errors.Is(err, exception.ErrLicenseAlreadyActivatedAndNotExpired):
+			httputil.RespondError(ctx, fasthttp.StatusConflict, err)
+
+		default:
+			controller.l.Error("issue: internal error: %v", err)
+			httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
+		}
 
 		return
 	}
@@ -37,13 +45,29 @@ func (controller *V1) verify(ctx *fasthttp.RequestCtx) {
 
 	resp, err := controller.licenseUc.Verify(context.Background(), req)
 	if err != nil {
-		controller.l.Error("verify: internal error: %v", err)
-		httputil.RespondError(ctx, fasthttp.StatusInternalServerError, err)
+		switch {
+		case errors.Is(err, exception.ErrLicenseNotFound):
+			httputil.RespondError(ctx, fasthttp.StatusNotFound, err)
+
+		case errors.Is(err, exception.ErrLicenseExpired):
+			httputil.RespondError(ctx, fasthttp.StatusUnauthorized, err)
+
+		case errors.Is(err, exception.ErrFailedToVerify):
+			httputil.RespondError(ctx, fasthttp.StatusBadRequest, err)
+
+		case errors.Is(err, exception.ErrFailedToSaveLicense),
+			errors.Is(err, exception.ErrFailedToSign):
+			httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
+
+		default:
+			controller.l.Error("verify: internal error: %v", err)
+			httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
+		}
 
 		return
 	}
 
-	ctx.SetContentType("text/plain")
+	ctx.SetContentType("text/plain; charset=utf-8")
 	ctx.Response.SetBodyString(resp.Signature)
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
@@ -59,7 +83,7 @@ func (controller *V1) getPublicKey(ctx *fasthttp.RequestCtx) {
 
 	if _, err := ctx.Write(publicKey); err != nil {
 		controller.l.Error("getPublicKey: failed to write response: %v", err)
-		httputil.RespondError(ctx, fasthttp.StatusInternalServerError, err)
+		httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
 
 		return
 	}
