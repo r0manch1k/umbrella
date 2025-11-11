@@ -16,7 +16,6 @@ type Router struct {
 func NewRouter(
 	l logger.Interface,
 	licenseUC usecase.LicenseUseCase,
-	keypairUC usecase.KeyPairUseCase,
 ) *Router {
 	rt := &Router{
 		Router: router.New(),
@@ -34,7 +33,6 @@ func NewRouter(
 	v1Group := rt.Router.Group("/v1")
 	{
 		v1.NewLicenseRoutes(v1Group, l, licenseUC)
-		v1.NewKeypairRoutes(v1Group, l, keypairUC)
 	}
 
 	return rt

@@ -8,5 +8,4 @@ import (
 type V1 struct {
 	l         logger.Interface
 	licenseUc usecase.LicenseUseCase
-	keypairUC usecase.KeyPairUseCase
 }
