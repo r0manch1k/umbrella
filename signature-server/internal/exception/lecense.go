@@ -3,7 +3,9 @@ package exception
 import "errors"
 
 var (
-	ErrInvalidProduct  = errors.New("invalid product")
-	ErrLicenseExpired  = errors.New("license expired")
-	ErrLicenseNotFound = errors.New("license not found")
+	ErrLicenseExpired      = errors.New("license expired")
+	ErrLicenseNotFound     = errors.New("license not found")
+	ErrFailedToVerify      = errors.New("failed to verify")
+	ErrFailedToSaveLicense = errors.New("failed to save activated license")
+	ErrFailedToSign        = errors.New("failed to sign")
 )
