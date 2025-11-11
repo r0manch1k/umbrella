@@ -34,7 +34,7 @@ void LicenseManager::verify()
     }
 
     QNetworkRequest req;
-    req.setUrl(QUrl("http://127.0.0.1:5000/license/verify"));
+    req.setUrl(QUrl("http://127.0.0.1:9090/license/verify"));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain");
 
     QJsonObject reqjo;
