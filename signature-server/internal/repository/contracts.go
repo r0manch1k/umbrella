@@ -14,5 +14,5 @@ type LicenseRepository interface {
 
 	// GetByFingerprint возвращает лицензию по её идентификатору и отпечатку устройства.
 	// Возвращает указатель на entity.License или nil, если лицензия не найдена.
-	GetByFingerprint(ctx context.Context, license, fingerprint string) (*entity.License, error)
+	GetByFingerprint(ctx context.Context, fingerprint string) (*entity.License, error)
 }

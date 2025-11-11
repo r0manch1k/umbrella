@@ -9,13 +9,12 @@ import (
 	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
 )
 
-func (r *Repository) GetByFingerprint(ctx context.Context, license, fingerprint string) (*entity.License, error) {
+func (r *Repository) GetByFingerprint(ctx context.Context, fingerprint string) (*entity.License, error) {
 	query, args, err := r.builder.
 		Select("fingerprint", "product", "issued_at", "expires_at", "nonce", "activated").
 		From("licenses").
 		Where(squirrel.Eq{
 			"fingerprint": fingerprint,
-			"product":     license,
 		}).
 		ToSql()
 	if err != nil {
