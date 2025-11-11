@@ -13,10 +13,8 @@
 #include <QMessageBox>
 #include <QTimer>
 
-
 AuthWindow::AuthWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::AuthWindow)
+    : QMainWindow(parent), ui(new Ui::AuthWindow)
 {
     ui->setupUi(this);
 
@@ -51,21 +49,20 @@ AuthWindow::AuthWindow(QWidget *parent)
     click->setVolume(0.4);
 
     ui->logoLabel->installEventFilter(this);
-    
+
     connect(ui->enterButton, &QPushButton::clicked, this, &AuthWindow::enter);
 
-    licenseManager = new LicenseManager(this);
+    lm = new LicenseManager(this);
 }
 
 bool AuthWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj == ui->logoLabel && event->type() == QEvent::MouseButtonPress) {
-        buy();
+    if (obj == ui->logoLabel && event->type() == QEvent::MouseButtonPress)
+    {
         return true;
     }
     return QMainWindow::eventFilter(obj, event);
 }
-
 
 void AuthWindow::enter()
 {
@@ -73,34 +70,29 @@ void AuthWindow::enter()
 
     QString key = ui->keyLineEdit->text().trimmed();
 
-    QByteArray signature;
+    lm->license(key.toUtf8());
+    lm->verify();
 
-    licenseManager->verify();
+    // if (lm->m_v)
+    if (1)
+    {
 
-    // if (licenseManager->isLicenseValid()) {
-    if (1) {
         auto *main = new MainWindow();
+        connect(main, &MainWindow::s_quit, this, [this, main]()
+                { 
+                this->move(main->pos()); 
+                main->hide(); 
+                this->show(); });
+
         main->move(this->pos());
         main->show();
         this->hide();
-    } else {
+    }
+    else
+    {
         ui->resLabel->setText("Access Denied");
     }
 }
-
-void AuthWindow::buy()
-{
-    click->play();
-
-    QString userId = "user123";
-    int duration = 30;
-    QString hwFingerprint = "HW1234";
-
-    licenseManager->issue(userId, duration, hwFingerprint);
-
-    QMessageBox::information(this, "ACCESS KEY", licenseManager->license());
-}
-
 
 AuthWindow::~AuthWindow()
 {

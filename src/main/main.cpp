@@ -42,13 +42,11 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(rq);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    connect(rq, &RedQueenWidget::s_quit, this, [](){
-        QApplication::quit();
-    });
+    connect(rq, &RedQueenWidget::s_quit, this, [this]()
+            { emit this->s_quit(); });
 
-    connect(rq, &RedQueenWidget::s_spread, this, [](){
-        QApplication::quit();
-    });
+    connect(rq, &RedQueenWidget::s_spread, this, []()
+            { QApplication::quit(); });
 
     click = new QSoundEffect(this);
     click->setSource(QUrl("qrc:/audio/click.wav"));
@@ -62,21 +60,20 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::spread()
 {
     click->play();
-    rq->spread(); 
+    rq->spread();
 }
 
 void MainWindow::about()
 {
     click->play();
-    rq->about(); 
+    rq->about();
 }
 
 void MainWindow::quit()
 {
     click->play();
-    rq->quit(); 
+    rq->quit();
 }
-
 
 MainWindow::~MainWindow()
 {

@@ -22,14 +22,16 @@ class LicenseManager : public QObject
 
 public:
     explicit LicenseManager(QObject *parent = nullptr);
-    void issue(const QString &userId, int duration_hours, const QString &hwFingerprint);
     void verify();
     void save(const QByteArray &l, const QByteArray &s);
     void load();
+    void license(const QByteArray &l);
+    QByteArray enc(const QByteArray &l) const;
+    QByteArray dec(const QByteArray &l) const;
     bool issigned(const QByteArray &l, const QByteArray &s);
     bool isLicenseValid() const;
     bool isExpired() const;
-    QString license() const;
+    bool m_v;
 
 private:
     QByteArray m_l;

@@ -7,9 +7,11 @@
 #include "./../redqueen/redqueen.h"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui
+{
+    class MainWindow;
+}
 QT_END_NAMESPACE
-
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +26,9 @@ private slots:
     void about();
     void quit();
 
+signals:
+    void s_quit();
+
 private:
     Ui::MainWindow *ui;
     RedQueenWidget *rq;
@@ -31,4 +36,3 @@ private:
 };
 
 #endif // MAINWINDOW_H
-

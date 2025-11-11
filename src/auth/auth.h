@@ -9,7 +9,10 @@
 #include <QEvent>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class AuthWindow; }
+namespace Ui
+{
+    class AuthWindow;
+}
 QT_END_NAMESPACE
 
 class AuthWindow : public QMainWindow
@@ -22,16 +25,14 @@ public:
 
 private slots:
     void enter();
-    void buy();
 
 private:
     Ui::AuthWindow *ui;
     QSoundEffect *click;
-    LicenseManager *licenseManager;
+    LicenseManager *lm;
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
-
 };
 
 #endif // AUTHWINDOW_H
