@@ -95,11 +95,8 @@ make fix
 
 - Response:
 
-```json
-{
-    "signature": "base64-encoded-rsa-signature"
-    // подпись JSON { "valid": true/false }
-}
+```text
+"base64-encoded-rsa-signature" // подпись JSON { "valid": true/false }
 ```
 
 Клиент должен раскодировать Base64 и проверить поле valid для получения статуса лицензии.
