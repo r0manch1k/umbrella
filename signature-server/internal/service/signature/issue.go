@@ -15,7 +15,7 @@ import (
 
 func (s *Service) Issue(fingerprint string, duration time.Duration) (string, error) {
 	now := time.Now().UTC()
-	license := entity.License{
+	license := &entity.License{
 		Fingerprint: fingerprint,
 		Product:     s.product,
 		IssuedAt:    now,
@@ -24,11 +24,19 @@ func (s *Service) Issue(fingerprint string, duration time.Duration) (string, err
 		Activated:   false,
 	}
 
+	// Сохраняем лицензию и проверяем ошибку
 	if s.licenseRepo != nil {
-		_ = s.licenseRepo.Save(context.Background(), license)
+		if err := s.licenseRepo.Save(context.Background(), license); err != nil {
+			return "", err
+		}
 	}
 
-	jb, _ := json.Marshal(license)
+	// Мерджим JSON и проверяем ошибку
+	jb, err := json.Marshal(license)
+	if err != nil {
+		return "", err
+	}
+
 	hash := sha256.Sum256(jb)
 
 	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
