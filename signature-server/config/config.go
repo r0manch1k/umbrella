@@ -39,7 +39,7 @@ type (
 		User        string `env:"DB_USERNAME" envDefault:"postgres"`
 		Password    string `env:"DB_PASSWORD" envDefault:"postgres"`
 		Database    string `env:"DB_DATABASE" envDefault:"postgres"`
-		MaxPoolSize int    `env:"DB_MAX_POOL_SIZE" envDefault:"10"`
+		MaxPoolSize int32  `env:"DB_MAX_POOL_SIZE" envDefault:"10"`
 	}
 
 	HTTP struct {
@@ -62,7 +62,7 @@ func NewConfig() (*Config, error) {
 	return cfg, nil
 }
 
-func (db DB) URL() string {
+func (db *DB) URL() string {
 	return urlbuilder.New().
 		Scheme("postgres").
 		User(db.User, db.Password).
