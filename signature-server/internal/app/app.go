@@ -17,27 +17,12 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	defer deps.Clients.PgSql.Close()
+	defer deps.Clients.PgSQL.Close()
 
-	deps.Logger.Info("%s", fmt.Sprintf("starting %s app...", cfg.App.Name))
-
-	// Генерация ключей при необходимости
-	if !fileExists(cfg.Signature.PrivateKeyPath) || !fileExists(cfg.Signature.PublicKeyPath) {
-		deps.Logger.Info("keypair not found — creating new keys...")
-
-		if err := deps.UseCases.KeyPair.GenerateAndSaveKeyPair(); err != nil {
-			panic(err)
-		}
-	}
+	deps.Logger.Info("%s", fmt.Sprintf("Starting %s app...", cfg.App.Name))
 
 	deps.Servers.HTTP.Start()
 	gracefulShutdown(deps.Logger, deps.Servers.HTTP)
-}
-
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-
-	return err == nil
 }
 
 func gracefulShutdown(l *logger.Logger, srvs ...servers.Server) {
@@ -46,7 +31,7 @@ func gracefulShutdown(l *logger.Logger, srvs ...servers.Server) {
 
 	select {
 	case sig := <-interrupt:
-		l.Info("%s", fmt.Sprintf("app - Run - signal: %s", sig))
+		l.Info("%s", fmt.Sprintf("App - Run - signal: %s", sig))
 	case err := <-mergeErrors(srvs...):
 		l.Fatal(err)
 	}

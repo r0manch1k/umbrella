@@ -6,7 +6,7 @@ import (
 )
 
 type Clients struct {
-	PgSql *postgres.Postgres
+	PgSQL *postgres.Postgres
 }
 
 func initClients(cfg *config.Config) (Clients, error) {
@@ -16,6 +16,6 @@ func initClients(cfg *config.Config) (Clients, error) {
 	}
 
 	return Clients{
-		PgSql: pg,
+		PgSQL: pg,
 	}, nil
 }
