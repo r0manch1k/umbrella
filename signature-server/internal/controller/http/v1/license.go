@@ -45,6 +45,7 @@ func (controller *V1) verify(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetContentType("text/plain")
 	ctx.Response.SetBodyString(resp.Signature)
+	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
 func (controller *V1) getPublicKey(ctx *fasthttp.RequestCtx) {
@@ -56,13 +57,13 @@ func (controller *V1) getPublicKey(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctx.SetContentType("application/x-pem-file")
-	ctx.SetStatusCode(fasthttp.StatusOK)
-
 	if _, err := ctx.Write(publicKey); err != nil {
 		controller.l.Error("getPublicKey: failed to write response: %v", err)
 		httputil.RespondError(ctx, fasthttp.StatusInternalServerError, err)
 
 		return
 	}
+
+	ctx.SetContentType("application/x-pem-file")
+	ctx.SetStatusCode(fasthttp.StatusOK)
 }
