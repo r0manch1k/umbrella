@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/r0manch1k/umbrella/signature-server/config"
 	"github.com/r0manch1k/umbrella/signature-server/internal/app/di"
@@ -13,6 +14,13 @@ import (
 )
 
 func Run(cfg *config.Config) {
+	loc, err := time.LoadLocation(cfg.App.TZ)
+	if err != nil {
+		panic(fmt.Errorf("invalid timezone %s: %w", cfg.App.TZ, err))
+	}
+
+	time.Local = loc
+
 	deps, err := di.New(cfg)
 	if err != nil {
 		panic(err)

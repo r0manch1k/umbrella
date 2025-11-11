@@ -26,7 +26,7 @@ func init() {
 		panic(fmt.Errorf("config error: %w", err))
 	}
 
-	l := logger.New(cfg.Log.Level, cfg.App.TZ)
+	l := logger.New(cfg.Log.Level)
 
 	dbURL := cfg.DB.URL() + "?sslmode=disable"
 
