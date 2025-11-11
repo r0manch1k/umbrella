@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"os"
-	"time"
 
 	"github.com/r0manch1k/umbrella/signature-server/internal/exception"
 	"github.com/r0manch1k/umbrella/signature-server/internal/repository"
@@ -13,8 +12,7 @@ import (
 )
 
 const (
-	nonceSize         = 16
-	repositoryTimeout = time.Second * 3
+	nonceSize = 16
 )
 
 var _ service.SignatureService = (*Service)(nil)

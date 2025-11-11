@@ -1,12 +1,9 @@
 package dto
 
-// LicenseVerifyRequest — запрос проверки лицензии.
 type LicenseVerifyRequest struct {
-	License   string `json:"license"`
-	Signature string `json:"signature"`
+	SecretPayload string `json:"secret_payload"`
 }
 
-// LicenseVerifyResponse — результат проверки.
 type LicenseVerifyResponse struct {
-	Signature string `json:"signature"` // зашифрованный ответ
+	Signature string `json:"signature"`
 }

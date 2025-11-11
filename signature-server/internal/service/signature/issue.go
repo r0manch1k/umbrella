@@ -13,42 +13,32 @@ import (
 	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
 )
 
-func (s *Service) Issue(userID, hwFingerprint string, duration time.Duration) (encodedPayload, encodedSignature string, err error) {
+func (s *Service) Issue(fingerprint string, duration time.Duration) (string, error) {
 	now := time.Now().UTC()
-	payload := entity.License{
-		UserID:        userID,
-		Product:       s.product,
-		IssuedAt:      now,
-		ExpiresAt:     now.Add(duration),
-		HWFingerprint: hwFingerprint,
-		Nonce:         randomNonce(nonceSize),
+	license := entity.License{
+		Fingerprint: fingerprint,
+		Product:     s.product,
+		IssuedAt:    now,
+		ExpiresAt:   now.Add(duration),
+		Nonce:       randomNonce(nonceSize),
+		Activated:   false,
 	}
 
-	jb, err := json.Marshal(payload)
-	if err != nil {
-		return "", "", err
+	if s.licenseRepo != nil {
+		_ = s.licenseRepo.Save(context.Background(), license)
 	}
 
+	jb, _ := json.Marshal(license)
 	hash := sha256.Sum256(jb)
 
 	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	encodedPayload = base64.StdEncoding.EncodeToString(jb)
-	encodedSignature = base64.StdEncoding.EncodeToString(sig)
+	encoded := base64.StdEncoding.EncodeToString(sig)
 
-	if s.licenseRepo != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), repositoryTimeout)
-		defer cancel()
-
-		if err := s.licenseRepo.Save(ctx, payload); err != nil {
-			return "", "", err
-		}
-	}
-
-	return encodedPayload, encodedSignature, nil
+	return encoded, nil
 }
 
 func randomNonce(n int) string {

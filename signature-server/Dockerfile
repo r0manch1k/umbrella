@@ -40,7 +40,7 @@ ENV CGO_ENABLED 0
 COPY . .
 
 # Собираем приложение в бинарный файл
-RUN go build -o app
+RUN go build -tags migrate -o app ./app
 
 
 FROM alpine:3.22 AS app-prod
@@ -49,7 +49,7 @@ FROM alpine:3.22 AS app-prod
 RUN apk add --no-cache ca-certificates
 
 # Копируем бинарный файл приложения из builder stage и запускаем его
-COPY --from=app-prod-builder app .
+COPY --from=app-prod-builder ./app .
 COPY docker/app/app.prod.sh /usr/local/bin/app.prod.sh
 RUN chmod +x /usr/local/bin/app.prod.sh
 CMD ["/usr/local/bin/app.prod.sh"]

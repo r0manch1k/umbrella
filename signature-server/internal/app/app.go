@@ -17,6 +17,7 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		panic(err)
 	}
+	defer deps.Clients.PgSql.Close()
 
 	deps.Logger.Info("%s", fmt.Sprintf("starting %s app...", cfg.App.Name))
 

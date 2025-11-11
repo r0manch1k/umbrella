@@ -3,70 +3,49 @@ package signature
 import (
 	"context"
 	"crypto"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"time"
-
-	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
-	"github.com/r0manch1k/umbrella/signature-server/internal/exception"
 )
 
-func (s *Service) Verify(encPayload, encSig string) (string, error) {
-	// Декодируем и проверяем исходную лицензию
-	jb, err := base64.StdEncoding.DecodeString(encPayload)
+func (s *Service) Verify(secretPayload string) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(secretPayload)
 	if err != nil {
 		return "", err
 	}
 
-	sig, err := base64.StdEncoding.DecodeString(encSig)
-	if err != nil {
+	var payload struct {
+		License     string `json:"license"`
+		Fingerprint string `json:"fingerprint"`
+	}
+	if err := json.Unmarshal(data, &payload); err != nil {
 		return "", err
 	}
 
-	hash := sha256.Sum256(jb)
-	if err := rsa.VerifyPKCS1v15(s.publicKey, crypto.SHA256, hash[:], sig); err != nil {
-		return "", exception.ErrInvalidSignature
-	}
-
-	var payload entity.License
-	if err := json.Unmarshal(jb, &payload); err != nil {
-		return "", err
-	}
-
-	valid := !(payload.Product != s.product || time.Now().UTC().After(payload.ExpiresAt))
-
-	// Проверяем наличие лицензии в БД
-	if s.licenseRepo != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-
-		stored, err := s.licenseRepo.GetByUserAndFingerprint(ctx, payload.UserID, payload.HWFingerprint)
-		if err != nil || stored == nil {
-			valid = false
+	// проверяем лицензию в БД
+	lic, err := s.licenseRepo.GetByFingerprint(context.Background(), payload.License, payload.Fingerprint)
+	valid := false
+	if err == nil && lic != nil {
+		if !lic.Activated {
+			lic.Activated = true
+			_ = s.licenseRepo.Save(context.Background(), *lic)
 		}
+		valid = true
 	}
 
-	// Формируем payload ответа
-	responsePayload := struct {
+	resp := struct {
 		Valid bool `json:"valid"`
-	}{
-		Valid: valid,
-	}
-	plain, _ := json.Marshal(responsePayload)
+	}{Valid: valid}
 
-	// Сначала шифруем секретным AES методом
-	secretEncrypted, err := encryptSecretAES(plain)
+	respBytes, _ := json.Marshal(resp)
+	hash := sha256.Sum256(respBytes)
+
+	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
 	if err != nil {
 		return "", err
 	}
 
-	// Затем подписываем RSA
-	finalSig, err := s.Sign([]byte(secretEncrypted))
-	if err != nil {
-		return "", err
-	}
-
-	return finalSig, nil
+	return base64.StdEncoding.EncodeToString(sig), nil
 }
