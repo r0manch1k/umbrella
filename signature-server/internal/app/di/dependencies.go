@@ -16,7 +16,7 @@ type Dependencies struct {
 }
 
 func New(cfg *config.Config) (Dependencies, error) {
-	l := logger.New(cfg.Log.Level, cfg.App.TZ)
+	l := logger.New(cfg.Log.Level)
 
 	clients, err := initClients(cfg)
 	if err != nil {
