@@ -40,13 +40,14 @@ ENV CGO_ENABLED 0
 COPY . .
 
 # Собираем приложение в бинарный файл
-RUN go build -tags migrate -o app ./app
+RUN go build -tags migrate -o ./app ./cmd/main.go
 
 
 FROM alpine:3.22 AS app-prod
 
 # Устанавливаем зависимости для сертификатов
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates tzdata
+
 
 # Копируем бинарный файл приложения из builder stage и запускаем его
 COPY --from=app-prod-builder ./app .
