@@ -1,0 +1,45 @@
+name: ${APP_NAME}
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: app-dev
+    volumes:
+      - ./:/app
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    healthcheck:
+      test: [ "CMD", "go", "version" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    hostname: ${DB_HOST}
+    command: -p ${DB_PORT}
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: postgres
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: ${TZ}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg-data:
