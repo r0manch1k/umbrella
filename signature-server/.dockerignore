@@ -1,0 +1,18 @@
+**
+
+# Включаем директории приложения
+!cmd/
+!config/
+!docker/
+!internal/
+!pkg/
+!resource/
+!migrations/
+
+# Включаем файлы окружения и зависимостей
+!.env*
+!go.mod
+!go.sum
+
+# Исключаем тесты
+**/*_test.go
