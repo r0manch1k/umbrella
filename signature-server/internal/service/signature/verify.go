@@ -27,7 +27,7 @@ func (s *Service) Verify(secretPayload string) (string, error) {
 		return "", err
 	}
 
-	license, err := s.licenseRepo.GetByFingerprint(context.Background(), payload.License, payload.Fingerprint)
+	license, err := s.licenseRepo.GetByFingerprint(context.Background(), payload.Fingerprint)
 	if err != nil {
 		return "", exception.ErrFailedToVerify
 	}

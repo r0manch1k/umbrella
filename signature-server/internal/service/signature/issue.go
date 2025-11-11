@@ -11,10 +11,22 @@ import (
 	"time"
 
 	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
+	"github.com/r0manch1k/umbrella/signature-server/internal/exception"
 )
 
 func (s *Service) Issue(fingerprint string, duration time.Duration) (string, error) {
-	now := time.Now().UTC()
+	ctx := context.Background()
+	now := time.Now()
+
+	existing, err := s.licenseRepo.GetByFingerprint(ctx, fingerprint)
+	if err != nil {
+		return "", err
+	}
+
+	if existing != nil && existing.Activated && existing.ExpiresAt.After(now) {
+		return "", exception.ErrLicenseAlreadyActivatedAndNotExpired
+	}
+
 	license := &entity.License{
 		Fingerprint: fingerprint,
 		Product:     s.product,
@@ -24,14 +36,12 @@ func (s *Service) Issue(fingerprint string, duration time.Duration) (string, err
 		Activated:   false,
 	}
 
-	// Сохраняем лицензию и проверяем ошибку
 	if s.licenseRepo != nil {
-		if err := s.licenseRepo.Save(context.Background(), license); err != nil {
+		if err := s.licenseRepo.Save(ctx, license); err != nil {
 			return "", err
 		}
 	}
 
-	// Мерджим JSON и проверяем ошибку
 	jb, err := json.Marshal(license)
 	if err != nil {
 		return "", err
