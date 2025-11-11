@@ -12,25 +12,19 @@
 make env
 ```
 
-### 2. Инициализация проекта (сборка и запуск)
+2. Инициализация проекта (сборка и запуск)
 
 ```bash
-make init
+make build
 ```
 
-Эта команда:
-
-- соберёт Docker-образы;
-- поднимет контейнер с приложением;
-- создаст ключи RSA, если они не существуют.
-
-### 3. Управление окружением
+3. Управление окружением
 
 ```bash
-make up # Запустить контейнеры
-make down # Остановить контейнеры
-make restart # Перезапустить контейнеры
-make clean # Удалить контейнеры и образы
+make up       # Запустить контейнеры
+make down     # Остановить контейнеры
+make restart  # Перезапустить контейнеры
+make clean    # Удалить контейнеры и образы
 make clean-volumes # Удалить контейнеры, образы и тома
 ```
 
@@ -63,8 +57,9 @@ make fix
 ```json
 {
     "user_id": "optional-user-123",
-    "duration_hours": 24,
-    "hw_fingerprint": "ABCD1234EF567890"
+    // опционально, если пустой — генерируется анонимный fingerprint
+    "duration_hours": 24
+    // срок действия лицензии
 }
 ```
 
@@ -72,8 +67,8 @@ make fix
 
 ```json
 {
-    "license": "base64-encoded-license-data",
-    "signature": "base64-encoded-signature"
+    "license": "base64-encoded-license-data"
+    // лицензия, подписанная RSA
 }
 ```
 
@@ -87,14 +82,14 @@ make fix
 
 ### POST /v1/license/verify
 
-Проверяет подлинность лицензии и подписи RSA.
+Проверяет подлинность лицензии и активирует её при первой проверке.
+В запросе отправляется secret_payload — Base64-кодированный JSON с полями { "license": "...", "hw_fingerprint": "..." }.
 
 - Request:
 
 ```json
 {
-    "license": "base64-encoded-license-data",
-    "signature": "base64-encoded-signature"
+    "secret_payload": "base64-encoded-json-with-license-and-fingerprint"
 }
 ```
 
@@ -102,17 +97,12 @@ make fix
 
 ```json
 {
-    "valid": true,
-    "signature": "base64-encoded-signature"
+    "signature": "base64-encoded-rsa-signature"
+    // подпись JSON { "valid": true/false }
 }
 ```
 
-```json
-{
-    "valid": false,
-    "reason": "invalid signature"
-}
-```
+Клиент должен раскодировать Base64 и проверить поле valid для получения статуса лицензии.
 
 - Коды ответа:
 
@@ -126,10 +116,19 @@ make fix
 ## Ключи RSA
 
 - При первом запуске сервис сам создаёт приватный и публичный ключи.
-- Публичный ключ выводится в логи при генерации.
+- Публичный ключ доступен через API GET /v1/keypair/public.pem.
 - Путь к приватному ключу задаётся через .env:
 
 ```text
 SIGNATURE_PRIVATE_KEY_PATH=/app/keys/private.pem
 SIGNATURE_RSA_KEY_BITS=2048
 ```
+
+---
+
+## Замечания по логике
+
+1. fingerprint является единственным идентификатором лицензии.
+2. Лицензия активируется только один раз при первой проверке.
+3. secret_payload используется для безопасной передачи лицензии и fingerprint на сервер.
+4. Сервер возвращает подпись signature для ответа, клиент проверяет её с помощью публичного ключа.
