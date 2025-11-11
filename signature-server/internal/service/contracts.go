@@ -8,9 +8,8 @@ import (
 type (
 	// SignatureService - сервис для работы с лицензиями.
 	SignatureService interface {
-		Issue(userID, hwFingerprint string, duration time.Duration) (payload, signature string, err error)
-		Verify(encPayload, encSig string) (string, error)
-		Sign(payload []byte) (string, error)
+		Issue(userID string, duration time.Duration) (string, error)
+		Verify(secretPayload string) (string, error)
 	}
 
 	// KeyPairService - сервис, который.
