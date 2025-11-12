@@ -45,24 +45,8 @@ func (controller *V1) verify(ctx *fasthttp.RequestCtx) {
 
 	resp, err := controller.licenseUc.Verify(context.Background(), req)
 	if err != nil {
-		switch {
-		case errors.Is(err, exception.ErrLicenseNotFound):
-			httputil.RespondError(ctx, fasthttp.StatusNotFound, err)
-
-		case errors.Is(err, exception.ErrLicenseExpired):
-			httputil.RespondError(ctx, fasthttp.StatusUnauthorized, err)
-
-		case errors.Is(err, exception.ErrFailedToVerify):
-			httputil.RespondError(ctx, fasthttp.StatusBadRequest, err)
-
-		case errors.Is(err, exception.ErrFailedToSaveLicense),
-			errors.Is(err, exception.ErrFailedToSign):
-			httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
-
-		default:
-			controller.l.Error("verify: internal error: %v", err)
-			httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
-		}
+		controller.l.Error("verify: internal error: %v", err)
+		httputil.RespondError(ctx, fasthttp.StatusInternalServerError, exception.ErrInternal)
 
 		return
 	}
