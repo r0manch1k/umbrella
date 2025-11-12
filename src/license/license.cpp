@@ -34,12 +34,16 @@ void LicenseManager::verify()
     }
 
     QNetworkRequest req;
-    req.setUrl(QUrl("http://127.0.0.1:9090/license/verify"));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain");
+    req.setUrl(QUrl("http://127.0.0.1:9090/v1/license/verify"));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QJsonObject reqjo;
     reqjo["license"] = QString::fromUtf8(m_l);
-    reqjo["signature"] = QString::fromUtf8(m_s);
+    reqjo["fingerprint"] = "Qt";
+    if (!m_s.isEmpty())
+    {
+        reqjo["signature"] = QString::fromUtf8(m_s);
+    }
 
     QByteArray j = QJsonDocument(reqjo).toJson(QJsonDocument::Compact);
 
@@ -47,8 +51,12 @@ void LicenseManager::verify()
 
     qDebug() << "req license:" << reqjo["license"];
     qDebug() << "req signature:" << reqjo["signature"];
+    qDebug() << "req signature:" << reqjo["hw_fingerprint"];
 
-    QNetworkReply *res = nm->post(req, enc);
+    QJsonObject reqjopa;
+    reqjopa["secret_payload"] = QString::fromUtf8(enc);
+
+    QNetworkReply *res = nm->post(req, reqjopa);
 
     connect(res, &QNetworkReply::finished, this, [this, res]()
             {
@@ -80,61 +88,41 @@ void LicenseManager::verify()
                 qDebug() << "❌ Reply is not a JSON object";
                 return;
             }
-            if (!resjd.isNull() && resjd.object().contains("payload") && resjd.object().contains("signature"))
+            if (!resjd.isNull() && resjd.object().contains("valid") && resjd.object().contains("signature"))
             {
                 QJsonObject resjo = resjd.object();
-                if (!resjo.contains("payload") || !resjo.contains("signature"))
+                if (!resjo.contains("valid") || !resjo.contains("signature"))
                 {
-                    qDebug() << "Missing payload or payload_signature";
+                    qDebug() << "Missing valid or signature";
                     m_v = false;
                     return;
                 }
-                if (resjo["payload"].isBool() && !resjo["payload"].toBool())
+                if (resjo["valid"].isBool() && !resjo["valid"].toBool())
                 {
-                    qDebug() << "payload is bool";
-                    m_v = false;
+                    qDebug() << "valid is bool";
+                    resjo["valid"].toBool();
                 }
-                else if (resjo["payload"].isObject())
+                if (issigned(m_l, resjo["signature"]))
                 {
-                    QJsonDocument p(resjo["payload"].toObject());
-                    QByteArray pba = p.toJson(QJsonDocument::Compact);
-                    QJsonDocument pjd = QJsonDocument::fromJson(pba);
-                    if (pjd.isObject() && pjd.object().contains("signature"))
-                    {
-                        QString sig = pjd.object()["signature"].toString();
-                        if (issigned(QByteArray::fromBase64(pjd.object()["license_value"].toString().toUtf8()), sig.toUtf8()))
-                        {
-                            m_s = sig.toUtf8();
-                            save(m_l, m_s);
-                            load();
-                            m_v = true;
-                            qDebug() << "License verified and saved successfully";
-                            return;
-                        }
-                        else
-                        {
-                            m_v = false;
-                        }
-                        res->deleteLater();
-                        qDebug() << "license check result:" << m_v;
-                    }
-                    else
-                    {
-                        qDebug() << "no valid key";
-                    }
+                    save(m_l, resjo["signature"]);
+                    load();
+                    m_v = true;
+                    qDebug() << "License verified and saved successfully";
+                    return;
                 }
                 else
                 {
-                    qDebug() << "error:" << res->errorString();
+                    m_v = false;
                 }
-                m_v = false;
-                res->deleteLater();
-            } else {
-                qDebug() << "payload error:" << res->error();
             }
+
+            m_v = false;
+            res->deleteLater();
+        
         } else {
-            qDebug() << "res error:" << res->error();
+        qDebug() << "res error:" << res->error();
         } });
+    res->deleteLater();
 }
 
 void LicenseManager::save(const QByteArray &l, const QByteArray &s)

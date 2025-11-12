@@ -73,8 +73,8 @@ void AuthWindow::enter()
     lm->license(key.toUtf8());
     lm->verify();
 
-    // if (lm->m_v)
-    if (1)
+    if (lm->m_v)
+    // if (1)
     {
 
         auto *main = new MainWindow();
