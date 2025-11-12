@@ -2,10 +2,8 @@ package signature
 
 import (
 	"context"
-	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"time"
@@ -36,25 +34,23 @@ func (s *Service) Issue(fingerprint string, duration time.Duration) (string, err
 		Activated:   false,
 	}
 
-	if s.licenseRepo != nil {
-		if err := s.licenseRepo.Save(ctx, license); err != nil {
-			return "", err
-		}
+	// Сохраняем в базу
+	if err := s.licenseRepo.Save(ctx, license); err != nil {
+		return "", err
 	}
 
-	jb, err := json.Marshal(license)
+	// сериализация лицензии
+	licenseJSON, err := json.Marshal(license)
 	if err != nil {
 		return "", err
 	}
 
-	hash := sha256.Sum256(jb)
-
-	sig, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
+	encrypted, err := rsa.EncryptPKCS1v15(rand.Reader, s.publicKey, licenseJSON)
 	if err != nil {
 		return "", err
 	}
 
-	encoded := base64.StdEncoding.EncodeToString(sig)
+	encoded := base64.StdEncoding.EncodeToString(encrypted)
 
 	return encoded, nil
 }

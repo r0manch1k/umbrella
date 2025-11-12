@@ -12,8 +12,7 @@ type SignatureService interface {
 	Issue(userID string, duration time.Duration) (string, error)
 
 	// Verify проверяет корректность переданного секретного payload лицензии.
-	// Возвращает подпись лицензии или ошибку.
-	Verify(secretPayload string) (string, error)
+	Verify(secretPayload string) string
 
 	// GetPublicKey возвращает публичный ключ в формате PEM для проверки лицензий.
 	GetPublicKey() ([]byte, error)

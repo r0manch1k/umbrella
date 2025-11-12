@@ -10,13 +10,13 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/r0manch1k/umbrella/signature-server/internal/exception"
+	"github.com/r0manch1k/umbrella/signature-server/internal/entity"
 )
 
-func (s *Service) Verify(secretPayload string) (string, error) {
+func (s *Service) Verify(secretPayload string) string {
 	data, err := base64.StdEncoding.DecodeString(secretPayload)
 	if err != nil {
-		return "", err
+		return encodeVerifyResponse(false, "")
 	}
 
 	var payload struct {
@@ -24,46 +24,64 @@ func (s *Service) Verify(secretPayload string) (string, error) {
 		Fingerprint string `json:"fingerprint"`
 	}
 	if err := json.Unmarshal(data, &payload); err != nil {
-		return "", err
+		return encodeVerifyResponse(false, "")
 	}
 
-	license, err := s.licenseRepo.GetByFingerprint(context.Background(), payload.Fingerprint)
+	encryptedLicense, err := base64.StdEncoding.DecodeString(payload.License)
 	if err != nil {
-		return "", exception.ErrFailedToVerify
+		return encodeVerifyResponse(false, "")
 	}
 
-	if license == nil {
-		return "", exception.ErrLicenseNotFound
-	}
-
-	if license.ExpiresAt.Before(time.Now().UTC()) {
-		return "", exception.ErrLicenseExpired
-	}
-
-	// Если лицензия ещё не активирована — активируем
-	if !license.Activated {
-		license.Activated = true
-		if err := s.licenseRepo.Save(context.Background(), license); err != nil {
-			return "", exception.ErrFailedToSaveLicense
-		}
-	}
-
-	// формируем ответ
-	response := struct {
-		Valid bool `json:"valid"`
-	}{Valid: true}
-
-	respBytes, err := json.Marshal(response)
+	decryptedLicense, err := rsa.DecryptPKCS1v15(rand.Reader, s.privateKey, encryptedLicense)
 	if err != nil {
-		return "", err
+		return encodeVerifyResponse(false, "")
 	}
 
-	hash := sha256.Sum256(respBytes)
+	var licFromClient entity.License
+	if err := json.Unmarshal(decryptedLicense, &licFromClient); err != nil {
+		return encodeVerifyResponse(false, "")
+	}
 
-	signature, err := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
+	licenseDB, err := s.licenseRepo.GetByFingerprint(context.Background(), payload.Fingerprint)
 	if err != nil {
-		return "", exception.ErrFailedToSign
+		return encodeVerifyResponse(false, "")
+	}
+	if licenseDB == nil {
+		return encodeVerifyResponse(false, "")
+	}
+	if licenseDB.ExpiresAt.Before(time.Now()) {
+		return encodeVerifyResponse(false, "")
 	}
 
-	return base64.StdEncoding.EncodeToString(signature), nil
+	valid := licenseDB.Fingerprint == licFromClient.Fingerprint &&
+		licenseDB.Nonce == licFromClient.Nonce &&
+		licenseDB.Product == licFromClient.Product
+
+	if valid && !licenseDB.Activated {
+		licenseDB.Activated = true
+		_ = s.licenseRepo.Save(context.Background(), licenseDB)
+	}
+
+	// Формируем подпись для клиента
+	licenseJSON, _ := json.Marshal(licenseDB)
+	hash := sha256.Sum256(licenseJSON)
+	encryptedForClient, _ := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
+	signature := base64.StdEncoding.EncodeToString(encryptedForClient)
+
+	return encodeVerifyResponse(valid, signature)
+}
+
+// encodeVerifyResponse - вспомогательная функция для формирования ответа.
+func encodeVerifyResponse(valid bool, signature string) string {
+	resp := struct {
+		Valid     bool   `json:"valid"`
+		Signature string `json:"signature,omitempty"`
+	}{
+		Valid:     valid,
+		Signature: signature,
+	}
+
+	respBytes, _ := json.Marshal(resp)
+
+	return base64.StdEncoding.EncodeToString(respBytes)
 }
