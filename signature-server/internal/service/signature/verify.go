@@ -63,8 +63,8 @@ func (s *Service) Verify(secretPayload string) string {
 	}
 
 	// Формируем подпись для клиента
-	licenseJSON, _ := json.Marshal(licenseDB)
-	hash := sha256.Sum256(licenseJSON)
+	license := []byte(payload.License)
+	hash := sha256.Sum256(license)
 	encryptedForClient, _ := rsa.SignPKCS1v15(rand.Reader, s.privateKey, crypto.SHA256, hash[:])
 	signature := base64.StdEncoding.EncodeToString(encryptedForClient)
 

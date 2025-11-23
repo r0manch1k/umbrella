@@ -1,19 +1,17 @@
 #include "redqueen.h"
 
-#include <QStackedWidget>
-#include <QMediaPlayer>
-#include <QVideoWidget>
-#include <QLabel>
 #include <QAudioOutput>
-#include <QVBoxLayout>
+#include <QGraphicsOpacityEffect>
+#include <QLabel>
+#include <QMediaPlayer>
+#include <QPropertyAnimation>
+#include <QStackedWidget>
 #include <QTimer>
 #include <QUrl>
-#include <QGraphicsOpacityEffect>
-#include <QPropertyAnimation>
+#include <QVBoxLayout>
+#include <QVideoWidget>
 
-RedQueenWidget::RedQueenWidget(QWidget *parent)
-    : QWidget(parent)
-{
+RedQueenWidget::RedQueenWidget(QWidget* parent) : QWidget(parent) {
     image = new QLabel(this);
     QPixmap pixmap(":/images/redqueen.jpg");
     if (!pixmap.isNull()) {
@@ -37,23 +35,24 @@ RedQueenWidget::RedQueenWidget(QWidget *parent)
     audioOutput->setVolume(0.7);
     player->setAudioOutput(audioOutput);
 
-    connect(player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
-        if (status == QMediaPlayer::EndOfMedia) {
-            video->hide();
-            player->stop();
+    connect(player, &QMediaPlayer::mediaStatusChanged, this,
+            [this](QMediaPlayer::MediaStatus status) {
+                if (status == QMediaPlayer::EndOfMedia) {
+                    video->hide();
+                    player->stop();
 
-            QString path = player->source().toLocalFile();
-            if (path.endsWith("quit.mp4")) {
-                emit s_quit();
-            } else if (path.endsWith("spread.mp4")) {
-                emit s_spread();
-            }
-        }
-    });
+                    QString path = player->source().toLocalFile();
+                    if (path.endsWith("quit.mp4")) {
+                        emit s_quit();
+                    } else if (path.endsWith("spread.mp4")) {
+                        emit s_spread();
+                    }
+                }
+            });
 
-    QVBoxLayout *layout = new QVBoxLayout(this);
+    QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(stacked);
-    layout->setContentsMargins(0,0,0,0);
+    layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
     video->hide();
@@ -61,26 +60,18 @@ RedQueenWidget::RedQueenWidget(QWidget *parent)
     QTimer::singleShot(0, this, &RedQueenWidget::enter);
 }
 
-void RedQueenWidget::enter() {
-    say("resources/video/enter.mp4");
-}
+void RedQueenWidget::enter() { say("resources/video/enter.mp4"); }
 
-void RedQueenWidget::spread() {
-    say("resources/video/spread.mp4");
-}
+void RedQueenWidget::spread() { say("resources/video/spread.mp4"); }
 
-void RedQueenWidget::about() {
-    say("resources/video/about.mp4");
-}
+void RedQueenWidget::about() { say("resources/video/about.mp4"); }
 
-void RedQueenWidget::quit() {
-    say("resources/video/quit.mp4");
-}
+void RedQueenWidget::quit() { say("resources/video/quit.mp4"); }
 
-void RedQueenWidget::say(const QString &path) {
-    if (player->playbackState() == QMediaPlayer::PlayingState) {
-        return;
-    }
+void RedQueenWidget::say(const QString& path) {
+    // if (player->playbackState() == QMediaPlayer::PlayingState) {
+    //     return;
+    // }
     video->raise();
     video->show();
     player->setSource(QUrl::fromLocalFile(path));
@@ -88,8 +79,7 @@ void RedQueenWidget::say(const QString &path) {
     player->play();
 }
 
-void RedQueenWidget::resizeEvent(QResizeEvent *event)
-{
+void RedQueenWidget::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     stacked->setGeometry(0, 0, width(), height());
     image->setGeometry(0, 0, width(), height());

@@ -9,6 +9,7 @@
 *.so.*
 *.dll
 *.dylib
+*.cil
 
 # Qt-es
 object_script.*.Release
@@ -60,5 +61,3 @@ build
 .vscode
 
 public.pem
-
-_
