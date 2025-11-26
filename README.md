@@ -1,8 +1,8 @@
-# Umbrella Corp. INAN
+# UMMRELLA CORP. INAN
 
-© Umbrella Corp. Internal Network Access Node. All Rights Reserved.
+© UMBRELLA CORP. INTERNAL NETWORK ACCESS NODE. ALL RIGHTS RESERVED.
 
-### Usage (MacOS)
+### USAGE (MacOS)
 
 Qt=6.9.3
 
@@ -17,11 +17,11 @@ Qt=6.9.3
 ./build/umbrella.app/Contents/MacOS/umbrella
 ```
 
-### Test
+### TEST
 
 #### POST https://thesokolovsky.ru/umbrella/license/issue
 
-Get _fingerprint_ by pressing on Umbrella Corporation logo.
+GET _fingerprint_ BY PRESSING ON UMBRELLA CORPORATION LOGO.
 
 ```json
 {
