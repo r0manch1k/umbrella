@@ -64,9 +64,15 @@ set_target_properties(umbrella PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE_ICON_FILE icon.icns
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+
+# Copy icon to Resources folder
+set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/icon.icns)
+set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+target_sources(umbrella PRIVATE ${ICON_FILE})
 
 include(GNUInstallDirs)
 install(TARGETS umbrella
