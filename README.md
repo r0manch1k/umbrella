@@ -16,16 +16,3 @@ Qt=6.9.3
 # Run
 ./build/umbrella.app/Contents/MacOS/umbrella
 ```
-
-### TEST
-
-#### POST https://thesokolovsky.ru/umbrella/license/issue
-
-GET _fingerprint_ BY PRESSING ON UMBRELLA CORPORATION LOGO.
-
-```json
-{
-  "fingerprint": "<fingerprint>",
-  "duration_hours": 24
-}
-```
